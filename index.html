@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reproductor Premium - Letras y Resaltado Rojo</title>
+    <title>Reproductor Premium - Ambient & Cinemático</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;700;900&display=swap');
 
@@ -24,162 +24,133 @@
             -webkit-user-select: none;
         }
 
+        /* --- FONDO AMBIENT MODE --- */
+        #ambient-bg {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background: linear-gradient(135deg, #0a0a0a 0%, #171717 100%);
+            background-size: cover;
+            background-position: center;
+            filter: blur(60px) brightness(0.25);
+            transform: scale(1.2); /* Evita bordes blancos por el blur */
+            z-index: 0;
+            transition: background-image 2s ease-in-out;
+        }
+
         /* --- UI CONFIGURACIÓN --- */
         .setup-screen {
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            background: linear-gradient(135deg, #0a0a0a 0%, #171717 100%);
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(5, 5, 5, 0.85);
+            backdrop-filter: blur(30px);
+            display: flex; justify-content: center; align-items: center;
             z-index: 200;
             transition: opacity 0.8s ease, visibility 0.8s;
         }
-
-        .setup-screen.hidden {
-            opacity: 0;
-            visibility: hidden;
-        }
+        .setup-screen.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
 
         .setup-box {
             background: rgba(255, 255, 255, 0.03);
-            backdrop-filter: blur(20px);
             border: 1px solid rgba(255, 255, 255, 0.05);
-            padding: 40px;
-            border-radius: 20px;
-            width: 90%;
-            max-width: 700px;
+            padding: 40px; border-radius: 20px; width: 90%; max-width: 700px;
             box-shadow: 0 25px 50px rgba(0,0,0,0.5);
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
+            display: flex; flex-direction: column; gap: 20px;
         }
 
+        .upload-row { display: flex; gap: 15px; }
         .file-upload-wrapper {
-            position: relative;
-            width: 100%;
-            height: 60px;
-            border: 2px dashed rgba(255,255,255,0.2);
-            border-radius: 10px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            cursor: pointer;
-            transition: all 0.3s;
-            background: rgba(0,0,0,0.2);
+            position: relative; flex: 1; height: 60px;
+            border: 2px dashed rgba(255,255,255,0.2); border-radius: 10px;
+            display: flex; justify-content: center; align-items: center; text-align: center;
+            cursor: pointer; transition: all 0.3s; background: rgba(0,0,0,0.2); padding: 0 10px;
         }
-
-        /* Cambiamos los detalles verdes por rojo también en la interfaz */
         .file-upload-wrapper:hover { border-color: #ff3333; background: rgba(255, 51, 51, 0.05); }
         .file-upload-wrapper input[type="file"] { position: absolute; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
-        .file-upload-text { color: #ff3333; font-weight: 700; pointer-events: none; }
+        .file-upload-text { color: #ff3333; font-weight: 700; font-size: 0.9rem; pointer-events: none; }
 
-        .panel { display: flex; flex-direction: column; gap: 15px; }
-
-        /* Recordatorio de comando */
         .helper-text {
-            background: rgba(255, 51, 51, 0.1);
-            border-left: 4px solid #ff3333;
-            padding: 12px 15px;
-            border-radius: 6px;
-            font-size: 0.85rem;
-            color: rgba(255, 255, 255, 0.8);
-            line-height: 1.5;
+            background: rgba(255, 51, 51, 0.1); border-left: 4px solid #ff3333;
+            padding: 12px 15px; border-radius: 6px; font-size: 0.85rem; color: rgba(255, 255, 255, 0.8); line-height: 1.5;
         }
-        .helper-text span {
-            color: #ff3333;
-            font-weight: 900;
-        }
+        .helper-text span { color: #ff3333; font-weight: 900; }
 
         textarea { 
-            width: 100%; 
-            height: 200px; 
-            background: rgba(0,0,0,0.4); 
-            border: 1px solid rgba(255,255,255,0.1); 
-            border-radius: 10px; 
-            padding: 15px; 
-            color: #ff3333; 
-            font-family: monospace; 
-            resize: none; 
-            outline: none; 
-            transition: border-color 0.3s;
+            width: 100%; height: 180px; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.1); 
+            border-radius: 10px; padding: 15px; color: #ff3333; font-family: monospace; resize: none; outline: none; transition: border-color 0.3s;
         }
         textarea:focus { border-color: #ff3333; }
 
         .btn-primary { 
-            background: #ffffff; 
-            color: #000000; 
-            border: none; 
-            border-radius: 50px; 
-            padding: 15px; 
-            font-size: 1rem; 
-            font-weight: 900; 
-            cursor: pointer; 
-            transition: all 0.3s; 
-            text-transform: uppercase; 
-            letter-spacing: 2px; 
+            background: #ffffff; color: #000000; border: none; border-radius: 50px; padding: 15px; 
+            font-size: 1rem; font-weight: 900; cursor: pointer; transition: all 0.3s; text-transform: uppercase; letter-spacing: 2px; 
         }
         .btn-primary:hover { transform: scale(1.02); box-shadow: 0 10px 30px rgba(255, 255, 255, 0.2); }
 
-        /* --- REPRODUCTOR INMERSIVO --- */
-        .lyrics-wrapper { height: 100vh; width: 100vw; position: relative; overflow: hidden; }
-        .lyrics-content { width: 100%; position: relative; transition: transform 0.6s cubic-bezier(0.25, 1, 0.5, 1); display: flex; flex-direction: column; align-items: center; }
+        /* --- BARRA DE PROGRESO MINIMALISTA --- */
+        #progress-container {
+            position: fixed; bottom: 0; left: 0; width: 100vw; height: 4px;
+            background: rgba(255, 255, 255, 0.1); z-index: 100;
+        }
+        #progress-bar {
+            height: 100%; width: 0%; background: #ff3333;
+            box-shadow: 0 0 15px rgba(255, 51, 51, 0.8);
+            transition: width 0.1s linear;
+        }
+
+        /* --- REPRODUCTOR Y LETRAS CINEMÁTICAS --- */
+        .lyrics-wrapper { height: 100vh; width: 100vw; position: relative; overflow: hidden; z-index: 10; perspective: 1000px; }
+        .lyrics-content { width: 100%; position: relative; transition: transform 0.8s cubic-bezier(0.25, 1, 0.5, 1); display: flex; flex-direction: column; align-items: center; }
 
         .lyric-line {
-            font-size: 5vw; 
-            font-weight: 900; 
-            text-align: center;
-            text-transform: uppercase;
-            padding: 6vh 20px; 
-            width: 90%; 
-            display: flex;
-            justify-content: center;
-            flex-wrap: wrap; 
+            font-size: 5vw; font-weight: 900; text-align: center; text-transform: uppercase;
+            padding: 6vh 20px; width: 90%; display: flex; justify-content: center; flex-wrap: wrap; 
         }
-
-        .word {
-            display: inline-block;
-            white-space: nowrap; 
-            margin-right: 0.25em; 
-        }
-
+        .word { display: inline-block; white-space: nowrap; margin-right: 0.25em; }
+        
         .char {
-            display: inline-block;
-            opacity: 0; 
-            transform: translateY(20px) scale(0.8);
-            filter: blur(10px);
-            color: #ffffff;
-            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); 
+            display: inline-block; opacity: 0; 
+            transform: translateY(40px) scale(0.7) translateZ(-100px); /* Vienen desde muy abajo y atrás */
+            filter: blur(15px); color: #ffffff; transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); 
         }
 
+        /* Activa: Al frente y nítida */
         .lyric-line.active .char {
-            opacity: 1 !important;
-            transform: translateY(0) scale(1.05) !important;
-            filter: blur(0px) !important;
-            text-shadow: 0 0 20px rgba(255, 255, 255, 0.8), 0 0 40px rgba(255, 255, 255, 0.4) !important;
+            opacity: 1 !important; transform: translateY(0) scale(1.05) translateZ(0) !important; filter: blur(0px) !important;
+            text-shadow: 0 0 20px rgba(255, 255, 255, 0.6), 0 0 40px rgba(255, 255, 255, 0.3) !important;
         }
-
+        
+        /* Pasada: Desaparece hacia arriba y al fondo (Cinemática) */
         .lyric-line.past .char {
-            opacity: 0.15 !important;
-            transform: translateY(0) scale(0.9) !important;
-            filter: blur(4px) !important;
-            text-shadow: none !important;
-            transition-delay: 0s !important; 
-            transition-duration: 0.5s !important; 
+            opacity: 0 !important; transform: translateY(-60px) scale(0.6) translateZ(-200px) !important; filter: blur(10px) !important;
+            text-shadow: none !important; transition-delay: 0s !important; transition-duration: 0.6s !important; 
         }
 
-        /* --- PALABRAS RESALTADAS EN ROJO NEÓN --- */
-        .word.highlight .char {
-            color: #ff3333 !important;
+        /* Resaltado Rojo Neón */
+        .word.highlight .char { color: #ff3333 !important; }
+        .lyric-line.active .word.highlight .char { text-shadow: 0 0 20px rgba(255, 51, 51, 0.8), 0 0 40px rgba(255, 51, 51, 0.4) !important; }
+
+        /* Modo Instrumental (Pulsación de espera) */
+        .lyric-line.instrumental .char {
+            animation: breathe 3s infinite ease-in-out;
+            color: rgba(255, 255, 255, 0.4) !important;
         }
-        .lyric-line.active .word.highlight .char {
-            text-shadow: 0 0 20px rgba(255, 51, 51, 0.8), 0 0 40px rgba(255, 51, 51, 0.4) !important;
+
+        @keyframes breathe {
+            0%, 100% { transform: scale(1); opacity: 0.3; text-shadow: 0 0 10px rgba(255,255,255,0.1); }
+            50% { transform: scale(1.1); opacity: 0.8; text-shadow: 0 0 30px rgba(255,51,51,0.5); color: #ff3333; }
+        }
+
+        /* --- PARTÍCULAS --- */
+        #particles-container { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 1; }
+        .particle { position: absolute; color: rgba(255, 255, 255, 0.15); filter: blur(1px); animation: floatUp ease-in-out forwards; }
+        @keyframes floatUp {
+            0% { transform: translateY(10vh) scale(0.5) rotate(0deg); opacity: 0; }
+            20% { opacity: 0.4; }
+            100% { transform: translateY(-60vh) scale(1.8) rotate(45deg); opacity: 0; }
         }
 
         @media (max-width: 768px) {
+            .upload-row { flex-direction: column; }
             .setup-box { padding: 25px; width: 95%; }
             .lyric-line { font-size: 8vw; padding: 5vh 10px; }
         }
@@ -187,69 +158,88 @@
 </head>
 <body>
 
+    <!-- Fondo Dinámico -->
+    <div id="ambient-bg"></div>
+
     <div class="setup-screen" id="setupScreen">
         <div class="setup-box">
-            <div class="file-upload-wrapper">
-                <span class="file-upload-text" id="fileNameText">1. SELECCIONA TU ARCHIVO MP3</span>
-                <input type="file" id="audioUpload" accept="audio/mp3,audio/wav">
-            </div>
-
-            <div class="panel" id="panel-play">
-                <!-- Cajita de recordatorio del comando -->
-                <div class="helper-text">
-                    💡 <b>Comando de color:</b> Envuelve cualquier palabra entre asteriscos para que se pinte de rojo.<br>
-                    Ejemplo: <i>Me has dejado <span>*hecha*</span> <span>*pedazos*</span></i>
+            
+            <div class="upload-row">
+                <div class="file-upload-wrapper">
+                    <span class="file-upload-text" id="fileNameText">1. AUDIO (MP3)</span>
+                    <input type="file" id="audioUpload" accept="audio/*">
                 </div>
-
-                <textarea id="lyricsCodeInput" placeholder="2. Pega aquí tu código LRC sacado de Lyricsify o internet..."></textarea>
-                
-                <button class="btn-primary" onclick="startImmersiveExperience()">INICIAR MODO INMERSIVO</button>
+                <div class="file-upload-wrapper">
+                    <span class="file-upload-text" id="coverNameText">2. PORTADA (Opcional)</span>
+                    <input type="file" id="coverUpload" accept="image/*">
+                </div>
             </div>
+
+            <div class="helper-text">
+                💡 <b>Resaltar color:</b> Envuelve palabras en asteriscos (<i>*rojo*</i>).<br>
+                🎸 <b>Instrumental:</b> Pon <span>...</span> o <span>🎶</span> en el LRC para limpiar la pantalla en pausas largas.
+            </div>
+
+            <textarea id="lyricsCodeInput" placeholder="3. Pega aquí tu código LRC..."></textarea>
+            <button class="btn-primary" onclick="startImmersiveExperience()">INICIAR MODO INMERSIVO</button>
+            
         </div>
     </div>
 
+    <div id="particles-container"></div>
     <audio id="audioElement"></audio>
 
     <div class="lyrics-wrapper">
         <div class="lyrics-content" id="lyricsContent"></div>
     </div>
 
+    <!-- Barra de progreso minimalista -->
+    <div id="progress-container"><div id="progress-bar"></div></div>
+
     <script>
         const audio = document.getElementById('audioElement');
         let parsedLyricsData = [];
         let lineElements = [];
         let currentLineIndex = -1;
+        const particlesContainer = document.getElementById('particles-container');
+        const progressBar = document.getElementById('progress-bar');
 
-        // Mostrar nombre del archivo al subir
+        // Carga de Audio
         document.getElementById('audioUpload').addEventListener('change', function(e) {
             const file = e.target.files[0];
             if (file) {
-                document.getElementById('fileNameText').innerText = file.name;
+                document.getElementById('fileNameText').innerText = file.name.substring(0, 15) + '...';
                 audio.src = URL.createObjectURL(file);
             }
         });
 
-        // Convertir formato LRC a datos usables
+        // Carga de Portada (Ambient Mode)
+        document.getElementById('coverUpload').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                document.getElementById('coverNameText').innerText = 'FOTO CARGADA';
+                const imageUrl = URL.createObjectURL(file);
+                document.getElementById('ambient-bg').style.backgroundImage = `url(${imageUrl})`;
+            }
+        });
+
         function parseInputText(text) {
             const results = [];
             const lrcRegex = /\[(\d{2}):(\d{2}(?:\.\d{2,3})?)\](.*)/;
             const lines = text.split('\n');
-            
             lines.forEach(line => {
                 const match = line.match(lrcRegex);
                 if (match) {
                     const minutes = parseInt(match[1], 10);
                     const seconds = parseFloat(match[2]);
                     const textContent = match[3].trim();
-                    if(textContent) {
-                        results.push({ time: (minutes * 60) + seconds, text: textContent });
-                    }
+                    // Ahora sí aceptamos líneas vacías o caracteres de espera para el instrumental
+                    results.push({ time: (minutes * 60) + seconds, text: textContent });
                 }
             });
             return results;
         }
 
-        // Crear las líneas y separar por palabras/letras
         function renderLyrics() {
             const lyricsContent = document.getElementById('lyricsContent');
             lyricsContent.innerHTML = ''; 
@@ -264,32 +254,33 @@
                 p.className = 'lyric-line future'; 
                 p.id = `line-${index}`;
                 
+                // Detectar comando instrumental
+                const isInstrumental = line.text === '...' || line.text === '🎶' || line.text === '';
+                if(isInstrumental) p.classList.add('instrumental');
+
                 let durationToNext = 3; 
-                if (index < parsedLyricsData.length - 1) {
-                    durationToNext = parsedLyricsData[index + 1].time - line.time;
-                }
+                if (index < parsedLyricsData.length - 1) durationToNext = parsedLyricsData[index + 1].time - line.time;
                 durationToNext = Math.min(durationToNext, 3.5); 
                 
                 const cleanText = line.text.replace(/\*/g, '').replace(/ /g, '');
                 const totalChars = cleanText.length;
                 let timePerChar = 0;
-                
-                if(totalChars > 0) {
-                    timePerChar = (durationToNext * 0.8) / totalChars;
-                    timePerChar = Math.max(0.04, Math.min(timePerChar, 0.12));
+                if(totalChars > 0 && !isInstrumental) {
+                    timePerChar = Math.max(0.04, Math.min((durationToNext * 0.8) / totalChars, 0.12));
                 }
 
                 let globalCharIdx = 0;
-                const words = line.text.split(' ');
+                
+                // Texto por defecto para silencios
+                const wordsToRender = isInstrumental ? ['...'] : line.text.split(' ');
 
-                words.forEach(word => {
+                wordsToRender.forEach(word => {
                     const wordSpan = document.createElement('span');
                     wordSpan.className = 'word';
 
-                    // Detectar palabra con asteriscos para resaltado rojo
                     if (word.includes('*')) {
                         wordSpan.classList.add('highlight');
-                        word = word.replace(/\*/g, ''); // Quitamos los asteriscos
+                        word = word.replace(/\*/g, ''); 
                     }
 
                     const chars = word.split('');
@@ -297,14 +288,13 @@
                         const charSpan = document.createElement('span');
                         charSpan.className = 'char';
                         charSpan.innerText = char;
-                        charSpan.style.transitionDelay = `${globalCharIdx * timePerChar}s`; 
+                        if(char === ' ') charSpan.innerHTML = '&nbsp;';
+                        if(!isInstrumental) charSpan.style.transitionDelay = `${globalCharIdx * timePerChar}s`; 
                         wordSpan.appendChild(charSpan);
                         globalCharIdx++;
                     });
-
                     p.appendChild(wordSpan);
                 });
-
                 lyricsContent.appendChild(p);
                 lineElements.push(p);
             });
@@ -314,30 +304,45 @@
             lyricsContent.appendChild(spacerBottom);
         }
 
-        // Centrar pantalla
         function centerActiveLine(activeIndex) {
             if (!lineElements[activeIndex]) return;
             const activeLine = lineElements[activeIndex];
             const containerHeight = window.innerHeight;
             const lineOffset = activeLine.offsetTop; 
             const lineHeight = activeLine.clientHeight;
-            
             const translateY = (containerHeight / 2) - lineOffset - (lineHeight / 2);
             document.getElementById('lyricsContent').style.transform = `translateY(${translateY}px)`;
         }
 
-        // Iniciar todo
+        function spawnParticles() {
+            const symbols = ['🎵', '🎶', '✨'];
+            const particleCount = Math.floor(Math.random() * 3) + 2; 
+
+            for (let i = 0; i < particleCount; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.innerText = symbols[Math.floor(Math.random() * symbols.length)];
+
+                const isLeft = Math.random() > 0.5;
+                const positionX = isLeft ? (Math.random() * 15 + 5) : (Math.random() * 15 + 80);
+                
+                particle.style.left = `${positionX}vw`;
+                particle.style.top = `${Math.random() * 20 + 60}vh`; 
+                particle.style.fontSize = `${Math.random() * 2 + 1.5}vw`; 
+                particle.style.animationDuration = `${Math.random() * 4 + 5}s`; 
+
+                particlesContainer.appendChild(particle);
+                setTimeout(() => { particle.remove(); }, 9000); 
+            }
+        }
+
         function startImmersiveExperience() {
             const rawCode = document.getElementById('lyricsCodeInput').value;
-            
-            if (!audio.src || audio.src === window.location.href) { alert("Falta el MP3."); return; }
+            if (!audio.src || audio.src === window.location.href) { alert("Sube el archivo de audio primero."); return; }
             if (!rawCode.trim()) { alert("Falta pegar el texto LRC."); return; }
 
             parsedLyricsData = parseInputText(rawCode);
-            if(parsedLyricsData.length === 0) {
-                alert("Error: Asegúrate de que el texto tenga el formato LRC correcto [00:00.00]");
-                return;
-            }
+            if(parsedLyricsData.length === 0) return alert("Error: Formato LRC no detectado.");
 
             renderLyrics();
             audio.currentTime = 0; 
@@ -347,15 +352,21 @@
                 currentLineIndex = 0;
                 lineElements.forEach(el => el.className = 'lyric-line future');
                 lineElements[0].className = 'lyric-line active';
-                setTimeout(() => { centerActiveLine(0); }, 50);
-            }).catch(e => alert("Tu navegador bloqueó el audio. Haz clic en cualquier parte de la página primero."));
+                setTimeout(() => { centerActiveLine(0); spawnParticles(); }, 50); 
+            }).catch(e => alert("Interactúa con la página antes de dar clic a Iniciar."));
         }
 
-        // Sincronización en vivo
+        // Motor principal de actualización
         audio.addEventListener('timeupdate', () => {
             const currentTime = audio.currentTime;
-            let activeIndex = 0; 
             
+            // Actualizar barra de progreso
+            if(audio.duration) {
+                const progressPercent = (currentTime / audio.duration) * 100;
+                progressBar.style.width = `${progressPercent}%`;
+            }
+
+            let activeIndex = 0; 
             for (let i = 0; i < parsedLyricsData.length; i++) {
                 if (currentTime >= parsedLyricsData[i].time - 0.2) {
                     activeIndex = i;
@@ -370,7 +381,14 @@
                     else if (index === activeIndex) { el.className = 'lyric-line active'; } 
                     else { el.className = 'lyric-line future'; }
                 });
+                
                 centerActiveLine(activeIndex);
+                
+                // No soltar partículas si es un espacio instrumental
+                if(!lineElements[activeIndex].classList.contains('instrumental')) {
+                    spawnParticles();
+                }
+
                 currentLineIndex = activeIndex;
             }
         });
