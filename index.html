@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reproductor Premium - Motor Blindado</title>
+    <title>Reproductor Premium - Efecto Letra por Letra</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;700;900&display=swap');
 
@@ -134,7 +134,6 @@
             font-family: monospace;
             resize: none;
             outline: none;
-            transition: border-color 0.3s;
         }
 
         textarea:focus { border-color: #1db954; }
@@ -175,52 +174,70 @@
         .sync-current { font-size: 1.5rem; font-weight: 900; margin-bottom: 10px; }
         .sync-next { color: rgba(255,255,255,0.5); font-size: 0.9rem; }
 
-        /* --- REPRODUCTOR INMERSIVO --- */
+        /* --- REPRODUCTOR INMERSIVO (CÓDIGO ARREGLADO) --- */
         .lyrics-wrapper {
             height: 100vh;
             width: 100vw;
             position: relative;
-            display: flex;
-            align-items: center; 
+            /* Ya NO centramos con flexbox aquí para no arruinar las matemáticas */
+            overflow: hidden; 
         }
 
         .lyrics-content {
             width: 100%;
-            transition: transform 0.5s cubic-bezier(0.25, 1, 0.5, 1);
+            position: relative; /* ESTO ARREGLA EL BUG DE DESAPARICIÓN */
+            transition: transform 0.6s cubic-bezier(0.25, 1, 0.5, 1);
             display: flex;
             flex-direction: column;
             align-items: center;
         }
 
-        /* Letra Inactiva */
+        /* --- ESTILOS DE LA LETRA POR LETRA --- */
         .lyric-line {
-            font-size: 3.5vw; 
-            font-weight: 700; 
-            color: rgba(255, 255, 255, 0.15); 
+            font-size: 5vw; 
+            font-weight: 900; 
             text-align: center;
-            transition: all 0.3s ease-out;
             text-transform: uppercase;
             padding: 6vh 20px; 
-            filter: blur(4px); 
-            opacity: 0.4;
             width: 90%; 
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap; /* Para que textos largos bajen de línea bien */
         }
 
-        /* LETRA ACTIVA BLINDADA CON !IMPORTANT */
-        .lyric-line.active {
-            color: #ffffff !important;
-            font-weight: 900 !important;
-            font-size: 5.5vw !important; 
-            transform: scale(1.05) !important;
-            filter: blur(0px) !important; 
+        /* Estado por defecto (Futuro): Totalmente invisible */
+        .lyric-line span {
+            display: inline-block;
+            opacity: 0; 
+            transform: translateY(20px) scale(0.8);
+            filter: blur(10px);
+            color: #ffffff;
+            /* Transición suave para el efecto de rebote */
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); 
+        }
+
+        /* Letra Activa: Aparecen con rebote y brillan */
+        .lyric-line.active span {
             opacity: 1 !important;
-            text-shadow: 0 0 20px rgba(255, 255, 255, 0.6), 0 0 40px rgba(255, 255, 255, 0.3) !important; 
+            transform: translateY(0) scale(1.05) !important;
+            filter: blur(0px) !important;
+            text-shadow: 0 0 20px rgba(255, 255, 255, 0.8), 0 0 40px rgba(255, 255, 255, 0.4) !important;
+        }
+
+        /* Letras Pasadas: Se van al fondo y se ponen borrosas INSTANTÁNEAMENTE */
+        .lyric-line.past span {
+            opacity: 0.15 !important;
+            transform: translateY(0) scale(0.9) !important;
+            filter: blur(4px) !important;
+            text-shadow: none !important;
+            /* Removemos el retraso para que se apaguen todas juntas, no una por una */
+            transition-delay: 0s !important; 
+            transition-duration: 0.5s !important; 
         }
 
         @media (max-width: 768px) {
             .setup-box { padding: 25px; width: 95%; }
-            .lyric-line { font-size: 6vw; padding: 5vh 10px; }
-            .lyric-line.active { font-size: 9vw !important; }
+            .lyric-line { font-size: 8vw; padding: 5vh 10px; }
         }
     </style>
 </head>
@@ -293,7 +310,7 @@
             }
         });
 
-        // --- LÓGICA DEL SINCRONIZADOR ---
+        // --- SINCRONIZADOR ---
         function startSyncProcess() {
             if (!audio.src || audio.src === window.location.href) {
                 alert("Primero debes seleccionar un archivo MP3.");
@@ -363,7 +380,7 @@
             }
         });
 
-        // --- LÓGICA DEL REPRODUCTOR BLINDADO ---
+        // --- RENDERIZADO LETRA POR LETRA ---
         function renderLyrics() {
             const lyricsContent = document.getElementById('lyricsContent');
             lyricsContent.innerHTML = ''; 
@@ -375,9 +392,21 @@
 
             parsedLyricsData.forEach((line, index) => {
                 const p = document.createElement('p');
-                p.className = 'lyric-line';
+                p.className = 'lyric-line future'; // Por defecto todas son "futuras" (invisibles)
                 p.id = `line-${index}`;
-                p.innerText = line.text;
+                
+                // Magia: Dividimos el texto en letras separadas
+                const chars = line.text.split('');
+                chars.forEach((char, charIdx) => {
+                    const span = document.createElement('span');
+                    span.innerText = char;
+                    if(char === ' ') span.innerHTML = '&nbsp;'; // Respetar espacios
+                    
+                    // Asignamos el retraso matemático (35 milisegundos por letra)
+                    span.style.transitionDelay = `${charIdx * 0.035}s`; 
+                    p.appendChild(span);
+                });
+
                 lyricsContent.appendChild(p);
                 lineElements.push(p);
             });
@@ -387,12 +416,12 @@
             lyricsContent.appendChild(spacerBottom);
         }
 
-        // Usamos window.innerHeight para que la caja negra no arruine las matemáticas
+        // --- CÁLCULO SEGURO ---
         function centerActiveLine(activeIndex) {
             if (!lineElements[activeIndex]) return;
             const activeLine = lineElements[activeIndex];
             const containerHeight = window.innerHeight;
-            const lineOffset = activeLine.offsetTop;
+            const lineOffset = activeLine.offsetTop; // Ahora siempre es preciso
             const lineHeight = activeLine.clientHeight;
             
             const translateY = (containerHeight / 2) - lineOffset - (lineHeight / 2);
@@ -411,7 +440,6 @@
                 return;
             }
 
-            // Extracción segura (Busca estrictamente lo que está entre [ y ])
             try {
                 const startIndex = rawCode.indexOf('[');
                 const endIndex = rawCode.lastIndexOf(']');
@@ -432,10 +460,10 @@
             audio.play().then(() => {
                 document.getElementById('setupScreen').classList.add('hidden');
                 
-                // Forzamos la clase activa de forma inmediata
+                // Empezar de inmediato con la primera línea
                 currentLineIndex = 0;
-                lineElements.forEach(el => el.classList.remove('active'));
-                lineElements[0].classList.add('active');
+                lineElements.forEach(el => el.className = 'lyric-line future');
+                lineElements[0].className = 'lyric-line active';
                 
                 setTimeout(() => {
                     centerActiveLine(0);
@@ -444,14 +472,13 @@
             }).catch(e => alert("Tu navegador bloqueó el audio. Intenta interactuar con la página primero."));
         }
 
-        // MOTOR DE ACTUALIZACIÓN AGRESIVO
+        // --- ACTUALIZADOR DE TIEMPO REFINADO ---
         audio.addEventListener('timeupdate', () => {
             if(isSyncing) return; 
             
             const currentTime = audio.currentTime;
             let activeIndex = 0; 
             
-            // Permitimos un margen de 0.2 segundos para que la transición se vea más natural
             for (let i = 0; i < parsedLyricsData.length; i++) {
                 if (currentTime >= parsedLyricsData[i].time - 0.2) {
                     activeIndex = i;
@@ -460,15 +487,15 @@
                 }
             }
 
-            // Actualizamos SOLO si el índice cambió para no saturar el rendimiento,
-            // PERO usamos fuerza bruta limpiando y añadiendo clases a todos.
             if (activeIndex !== currentLineIndex) {
                 
                 lineElements.forEach((el, index) => {
-                    if (index === activeIndex) {
-                        el.classList.add('active');
+                    if (index < activeIndex) {
+                        el.className = 'lyric-line past'; // Letras viejas
+                    } else if (index === activeIndex) {
+                        el.className = 'lyric-line active'; // Letra actual (efecto máquina de escribir)
                     } else {
-                        el.classList.remove('active');
+                        el.className = 'lyric-line future'; // Letras que aún no se cantan
                     }
                 });
 
