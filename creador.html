@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sincronizador de Letras</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #121212;
+            color: white;
+            padding: 20px;
+            display: flex;
+            gap: 20px;
+        }
+        .panel {
+            flex: 1;
+            background: #1e1e1e;
+            padding: 20px;
+            border-radius: 10px;
+        }
+        textarea {
+            width: 100%;
+            height: 300px;
+            background: #2a2a2a;
+            color: white;
+            border: 1px solid #444;
+            padding: 10px;
+            font-family: monospace;
+            margin-bottom: 10px;
+        }
+        button {
+            background: #1db954;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        button:hover { background: #1ed760; }
+        .current-line {
+            font-size: 2em;
+            color: #1db954;
+            margin: 20px 0;
+            text-align: center;
+            font-weight: bold;
+        }
+        .next-line {
+            font-size: 1.2em;
+            color: #888;
+            text-align: center;
+        }
+        #outputCode {
+            white-space: pre-wrap;
+            background: #000;
+            padding: 15px;
+            color: #0f0;
+            font-family: monospace;
+            border-radius: 5px;
+            height: 300px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="panel">
+        <h2>1. Pega tu letra aquí</h2>
+        <p>Una frase por línea.</p>
+        <textarea id="rawLyrics">Intro musical...
+Escribe aquí tu primera línea
+Y aquí la segunda
+Sigue el ritmo
+Presiona espacio para marcar el tiempo</textarea>
+        
+        <h2>2. Selecciona tu audio local</h2>
+        <input type="file" id="audioUpload" accept="audio/mp3,audio/wav" style="margin-bottom: 15px;">
+        <br>
+        <audio id="audioPlayer" controls></audio>
+        <br><br>
+        <button onclick="startSync()">Iniciar Sincronización</button>
+    </div>
+
+    <div class="panel" id="syncPanel" style="display: none;">
+        <h2>3. Sincroniza</h2>
+        <p>Reproduce el audio y presiona <b>[ESPACIO]</b> justo cuando escuches la frase en verde.</p>
+        
+        <div class="current-line" id="currentLineDisplay">Cargando...</div>
+        <div class="next-line" id="nextLineDisplay">Siguiente: ...</div>
+
+        <h2 style="margin-top: 40px;">4. Resultado (Copia esto en tu reproductor premium)</h2>
+        <div id="outputCode">const lyricsData = [];</div>
+    </div>
+
+    <script>
+        let lines = [];
+        let currentIndex = 0;
+        let syncedData = [];
+        const audioPlayer = document.getElementById('audioPlayer');
+
+        // Cargar audio local para no tener que subirlo aún
+        document.getElementById('audioUpload').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                audioPlayer.src = URL.createObjectURL(file);
+            }
+        });
+
+        function startSync() {
+            const rawText = document.getElementById('rawLyrics').value;
+            // Separar por saltos de línea y quitar líneas vacías
+            lines = rawText.split('\n').map(line => line.trim()).filter(line => line.length > 0);
+            
+            if (lines.length === 0) {
+                alert("Pega alguna letra primero.");
+                return;
+            }
+
+            currentIndex = 0;
+            syncedData = [];
+            document.getElementById('syncPanel').style.display = 'block';
+            updateDisplay();
+            updateOutput();
+            
+            // Foco en la ventana para asegurar que capte la barra espaciadora
+            window.focus();
+        }
+
+        function updateDisplay() {
+            if (currentIndex < lines.length) {
+                document.getElementById('currentLineDisplay').innerText = lines[currentIndex];
+                document.getElementById('nextLineDisplay').innerText = 
+                    (currentIndex + 1 < lines.length) ? `Siguiente: ${lines[currentIndex + 1]}` : "Fin de la canción";
+            } else {
+                document.getElementById('currentLineDisplay').innerText = "¡Sincronización terminada!";
+                document.getElementById('nextLineDisplay').innerText = "";
+            }
+        }
+
+        function updateOutput() {
+            let code = "const lyricsData = [\n";
+            syncedData.forEach((item, index) => {
+                const isLast = index === syncedData.length - 1;
+                // Escapar comillas dobles en el texto por si acaso
+                const safeText = item.text.replace(/"/g, '\\"');
+                code += `    { time: ${item.time}, text: "${safeText}" }${isLast ? '' : ','}\n`;
+            });
+            code += "];";
+            document.getElementById('outputCode').innerText = code;
+        }
+
+        // Escuchar la barra espaciadora
+        document.addEventListener('keydown', function(event) {
+            if (event.code === 'Space' && document.getElementById('syncPanel').style.display === 'block') {
+                // Prevenir que la barra espaciadora pause el reproductor de audio por defecto
+                if(document.activeElement !== audioPlayer) {
+                    event.preventDefault();
+                }
+
+                if (currentIndex < lines.length && !audioPlayer.paused) {
+                    // Guardar el tiempo actual con 1 decimal
+                    const time = parseFloat(audioPlayer.currentTime.toFixed(1));
+                    
+                    syncedData.push({
+                        time: time,
+                        text: lines[currentIndex]
+                    });
+
+                    currentIndex++;
+                    updateDisplay();
+                    updateOutput();
+                }
+            }
+        });
+    </script>
+</body>
+</html>
