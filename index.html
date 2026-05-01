@@ -24,17 +24,26 @@
             -webkit-user-select: none;
         }
 
-        /* --- FONDO AMBIENT MODE --- */
+        /* --- FONDO AMBIENT MODE CORREGIDO --- */
         #ambient-bg {
             position: fixed;
             top: 0; left: 0; width: 100vw; height: 100vh;
             background: linear-gradient(135deg, #0a0a0a 0%, #171717 100%);
             background-size: cover;
             background-position: center;
-            filter: blur(60px) brightness(0.25);
-            transform: scale(1.2); /* Evita bordes blancos por el blur */
+            /* Redujimos el blur para que la portada sea visible */
+            filter: blur(15px); 
+            transform: scale(1.1); 
             z-index: 0;
             transition: background-image 2s ease-in-out;
+        }
+
+        /* Capa oscura superpuesta para que las letras sigan resaltando */
+        #ambient-bg::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.65); 
         }
 
         /* --- UI CONFIGURACIÓN --- */
@@ -45,7 +54,7 @@
             backdrop-filter: blur(30px);
             display: flex; justify-content: center; align-items: center;
             z-index: 200;
-            transition: opacity 0.8s ease, visibility 0.8s;
+            transition: opacity 0.4s ease, visibility 0.4s; /* Transición más rápida al salir/entrar */
         }
         .setup-screen.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
 
@@ -97,6 +106,13 @@
             transition: width 0.1s linear;
         }
 
+        /* Indicador sutil de ESC */
+        .esc-hint {
+            position: fixed; top: 20px; left: 20px; color: rgba(255,255,255,0.3);
+            font-size: 0.8rem; font-weight: 700; z-index: 100; letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
         /* --- REPRODUCTOR Y LETRAS CINEMÁTICAS --- */
         .lyrics-wrapper { height: 100vh; width: 100vw; position: relative; overflow: hidden; z-index: 10; perspective: 1000px; }
         .lyrics-content { width: 100%; position: relative; transition: transform 0.8s cubic-bezier(0.25, 1, 0.5, 1); display: flex; flex-direction: column; align-items: center; }
@@ -109,27 +125,23 @@
         
         .char {
             display: inline-block; opacity: 0; 
-            transform: translateY(40px) scale(0.7) translateZ(-100px); /* Vienen desde muy abajo y atrás */
+            transform: translateY(40px) scale(0.7) translateZ(-100px); 
             filter: blur(15px); color: #ffffff; transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); 
         }
 
-        /* Activa: Al frente y nítida */
         .lyric-line.active .char {
             opacity: 1 !important; transform: translateY(0) scale(1.05) translateZ(0) !important; filter: blur(0px) !important;
             text-shadow: 0 0 20px rgba(255, 255, 255, 0.6), 0 0 40px rgba(255, 255, 255, 0.3) !important;
         }
         
-        /* Pasada: Desaparece hacia arriba y al fondo (Cinemática) */
         .lyric-line.past .char {
             opacity: 0 !important; transform: translateY(-60px) scale(0.6) translateZ(-200px) !important; filter: blur(10px) !important;
             text-shadow: none !important; transition-delay: 0s !important; transition-duration: 0.6s !important; 
         }
 
-        /* Resaltado Rojo Neón */
         .word.highlight .char { color: #ff3333 !important; }
         .lyric-line.active .word.highlight .char { text-shadow: 0 0 20px rgba(255, 51, 51, 0.8), 0 0 40px rgba(255, 51, 51, 0.4) !important; }
 
-        /* Modo Instrumental (Pulsación de espera) */
         .lyric-line.instrumental .char {
             animation: breathe 3s infinite ease-in-out;
             color: rgba(255, 255, 255, 0.4) !important;
@@ -140,7 +152,6 @@
             50% { transform: scale(1.1); opacity: 0.8; text-shadow: 0 0 30px rgba(255,51,51,0.5); color: #ff3333; }
         }
 
-        /* --- PARTÍCULAS --- */
         #particles-container { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 1; }
         .particle { position: absolute; color: rgba(255, 255, 255, 0.15); filter: blur(1px); animation: floatUp ease-in-out forwards; }
         @keyframes floatUp {
@@ -177,7 +188,8 @@
 
             <div class="helper-text">
                 💡 <b>Resaltar color:</b> Envuelve palabras en asteriscos (<i>*rojo*</i>).<br>
-                🎸 <b>Instrumental:</b> Pon <span>...</span> o <span>🎶</span> en el LRC para limpiar la pantalla en pausas largas.
+                🎸 <b>Instrumental:</b> Pon <span>...</span> o <span>🎶</span> en el LRC para pausas.<br>
+                ⌨️ <b>Editar en vivo:</b> Presiona <span>ESC</span> en cualquier momento para volver aquí.
             </div>
 
             <textarea id="lyricsCodeInput" placeholder="3. Pega aquí tu código LRC..."></textarea>
@@ -185,6 +197,9 @@
             
         </div>
     </div>
+
+    <!-- Indicador visual cuando está reproduciendo -->
+    <div class="esc-hint" id="escHint" style="display: none;">Presiona ESC para editar</div>
 
     <div id="particles-container"></div>
     <audio id="audioElement"></audio>
@@ -203,8 +218,21 @@
         let currentLineIndex = -1;
         const particlesContainer = document.getElementById('particles-container');
         const progressBar = document.getElementById('progress-bar');
+        const setupScreen = document.getElementById('setupScreen');
+        const escHint = document.getElementById('escHint');
 
-        // Carga de Audio
+        // Función para la tecla ESC
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape' || event.keyCode === 27) {
+                // Solo actuamos si la pantalla de configuración está oculta (es decir, estamos en modo inmersivo)
+                if (setupScreen.classList.contains('hidden')) {
+                    audio.pause();
+                    setupScreen.classList.remove('hidden');
+                    escHint.style.display = 'none';
+                }
+            }
+        });
+
         document.getElementById('audioUpload').addEventListener('change', function(e) {
             const file = e.target.files[0];
             if (file) {
@@ -213,7 +241,6 @@
             }
         });
 
-        // Carga de Portada (Ambient Mode)
         document.getElementById('coverUpload').addEventListener('change', function(e) {
             const file = e.target.files[0];
             if (file) {
@@ -233,7 +260,6 @@
                     const minutes = parseInt(match[1], 10);
                     const seconds = parseFloat(match[2]);
                     const textContent = match[3].trim();
-                    // Ahora sí aceptamos líneas vacías o caracteres de espera para el instrumental
                     results.push({ time: (minutes * 60) + seconds, text: textContent });
                 }
             });
@@ -254,7 +280,6 @@
                 p.className = 'lyric-line future'; 
                 p.id = `line-${index}`;
                 
-                // Detectar comando instrumental
                 const isInstrumental = line.text === '...' || line.text === '🎶' || line.text === '';
                 if(isInstrumental) p.classList.add('instrumental');
 
@@ -270,8 +295,6 @@
                 }
 
                 let globalCharIdx = 0;
-                
-                // Texto por defecto para silencios
                 const wordsToRender = isInstrumental ? ['...'] : line.text.split(' ');
 
                 wordsToRender.forEach(word => {
@@ -345,10 +368,14 @@
             if(parsedLyricsData.length === 0) return alert("Error: Formato LRC no detectado.");
 
             renderLyrics();
+            
+            // Rebobinamos al inicio para probar las ediciones completas
             audio.currentTime = 0; 
             
             audio.play().then(() => {
-                document.getElementById('setupScreen').classList.add('hidden');
+                setupScreen.classList.add('hidden');
+                escHint.style.display = 'block'; // Mostrar el texto de pista
+                
                 currentLineIndex = 0;
                 lineElements.forEach(el => el.className = 'lyric-line future');
                 lineElements[0].className = 'lyric-line active';
@@ -356,11 +383,9 @@
             }).catch(e => alert("Interactúa con la página antes de dar clic a Iniciar."));
         }
 
-        // Motor principal de actualización
         audio.addEventListener('timeupdate', () => {
             const currentTime = audio.currentTime;
             
-            // Actualizar barra de progreso
             if(audio.duration) {
                 const progressPercent = (currentTime / audio.duration) * 100;
                 progressBar.style.width = `${progressPercent}%`;
@@ -384,7 +409,6 @@
                 
                 centerActiveLine(activeIndex);
                 
-                // No soltar partículas si es un espacio instrumental
                 if(!lineElements[activeIndex].classList.contains('instrumental')) {
                     spawnParticles();
                 }
