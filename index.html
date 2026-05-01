@@ -3,9 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reproductor Premium All-in-One</title>
+    <title>Reproductor Premium - Motor Blindado</title>
     <style>
-        /* Cambiamos a Poppins, una fuente mucho más bonita, redondeada y gruesa */
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;700;900&display=swap');
 
         * {
@@ -25,7 +24,7 @@
             -webkit-user-select: none;
         }
 
-        /* --- PANEL DE CONFIGURACIÓN (HUB) --- */
+        /* --- PANEL DE CONFIGURACIÓN --- */
         .setup-screen {
             position: fixed;
             top: 0;
@@ -92,7 +91,6 @@
             pointer-events: none;
         }
 
-        /* --- TABS --- */
         .tabs {
             display: flex;
             border-bottom: 1px solid rgba(255,255,255,0.1);
@@ -108,7 +106,6 @@
             color: rgba(255,255,255,0.4);
             transition: all 0.3s;
             text-transform: uppercase;
-            letter-spacing: 1px;
         }
 
         .tab.active {
@@ -126,7 +123,6 @@
             display: flex;
         }
 
-        /* --- ELEMENTOS DE LOS PANELES --- */
         textarea {
             width: 100%;
             height: 180px;
@@ -142,7 +138,6 @@
         }
 
         textarea:focus { border-color: #1db954; }
-        
         #lyricsCodeInput { color: #1db954; }
 
         .btn-primary {
@@ -152,7 +147,7 @@
             border-radius: 50px;
             padding: 15px;
             font-size: 1rem;
-            font-weight: 900; /* Botones más gruesos */
+            font-weight: 900;
             cursor: pointer;
             transition: all 0.3s;
             text-transform: uppercase;
@@ -180,7 +175,7 @@
         .sync-current { font-size: 1.5rem; font-weight: 900; margin-bottom: 10px; }
         .sync-next { color: rgba(255,255,255,0.5); font-size: 0.9rem; }
 
-        /* --- REPRODUCTOR INMERSIVO MEJORADO --- */
+        /* --- REPRODUCTOR INMERSIVO --- */
         .lyrics-wrapper {
             height: 100vh;
             width: 100vw;
@@ -191,18 +186,19 @@
 
         .lyrics-content {
             width: 100%;
-            transition: transform 0.6s cubic-bezier(0.25, 1, 0.5, 1);
+            transition: transform 0.5s cubic-bezier(0.25, 1, 0.5, 1);
             display: flex;
             flex-direction: column;
             align-items: center;
         }
 
+        /* Letra Inactiva */
         .lyric-line {
-            font-size: 3.5vw; /* Ligeramente más grande base */
-            font-weight: 700; /* Letra apagada también es gruesa */
+            font-size: 3.5vw; 
+            font-weight: 700; 
             color: rgba(255, 255, 255, 0.15); 
             text-align: center;
-            transition: all 0.4s ease-out;
+            transition: all 0.3s ease-out;
             text-transform: uppercase;
             padding: 6vh 20px; 
             filter: blur(4px); 
@@ -210,22 +206,21 @@
             width: 90%; 
         }
 
-        /* EL ESTILO DE LA LETRA ACTIVA (Bonita y gruesita) */
+        /* LETRA ACTIVA BLINDADA CON !IMPORTANT */
         .lyric-line.active {
-            color: #ffffff;
-            font-weight: 900; /* Ultra gruesa */
-            font-size: 5.5vw; /* Gigante */
-            transform: scale(1.05);
-            filter: blur(0px); 
-            opacity: 1;
-            /* Doble sombra para un resplandor premium nítido */
-            text-shadow: 0 0 20px rgba(255, 255, 255, 0.5), 0 0 40px rgba(255, 255, 255, 0.2); 
+            color: #ffffff !important;
+            font-weight: 900 !important;
+            font-size: 5.5vw !important; 
+            transform: scale(1.05) !important;
+            filter: blur(0px) !important; 
+            opacity: 1 !important;
+            text-shadow: 0 0 20px rgba(255, 255, 255, 0.6), 0 0 40px rgba(255, 255, 255, 0.3) !important; 
         }
 
         @media (max-width: 768px) {
             .setup-box { padding: 25px; width: 95%; }
             .lyric-line { font-size: 6vw; padding: 5vh 10px; }
-            .lyric-line.active { font-size: 9vw; }
+            .lyric-line.active { font-size: 9vw !important; }
         }
     </style>
 </head>
@@ -256,7 +251,7 @@
             </div>
 
             <div class="panel" id="panel-play">
-                <textarea id="lyricsCodeInput" placeholder="Aquí aparecerá el código generado automáticamente, o puedes pegar uno que ya tengas guardado."></textarea>
+                <textarea id="lyricsCodeInput" placeholder="Pega aquí el código que copiaste."></textarea>
                 <button class="btn-primary" onclick="startImmersiveExperience()">INICIAR MODO INMERSIVO</button>
             </div>
 
@@ -266,9 +261,7 @@
     <audio id="audioElement"></audio>
 
     <div class="lyrics-wrapper">
-        <div class="lyrics-content" id="lyricsContent">
-            <!-- JS inyecta las líneas -->
-        </div>
+        <div class="lyrics-content" id="lyricsContent"></div>
     </div>
 
     <script>
@@ -300,12 +293,12 @@
             }
         });
 
+        // --- LÓGICA DEL SINCRONIZADOR ---
         function startSyncProcess() {
             if (!audio.src || audio.src === window.location.href) {
                 alert("Primero debes seleccionar un archivo MP3.");
                 return;
             }
-
             const rawText = document.getElementById('rawLyrics').value;
             rawLines = rawText.split('\n').map(l => l.trim()).filter(l => l.length > 0);
             
@@ -361,7 +354,6 @@
         document.addEventListener('keydown', function(event) {
             if (event.code === 'Space' && isSyncing) {
                 event.preventDefault(); 
-                
                 if (syncIndex < rawLines.length) {
                     const time = parseFloat(audio.currentTime.toFixed(1));
                     syncedData.push({ time: time, text: rawLines[syncIndex] });
@@ -371,6 +363,7 @@
             }
         });
 
+        // --- LÓGICA DEL REPRODUCTOR BLINDADO ---
         function renderLyrics() {
             const lyricsContent = document.getElementById('lyricsContent');
             lyricsContent.innerHTML = ''; 
@@ -394,10 +387,11 @@
             lyricsContent.appendChild(spacerBottom);
         }
 
+        // Usamos window.innerHeight para que la caja negra no arruine las matemáticas
         function centerActiveLine(activeIndex) {
             if (!lineElements[activeIndex]) return;
             const activeLine = lineElements[activeIndex];
-            const containerHeight = document.querySelector('.lyrics-wrapper').clientHeight;
+            const containerHeight = window.innerHeight;
             const lineOffset = activeLine.offsetTop;
             const lineHeight = activeLine.clientHeight;
             
@@ -413,56 +407,71 @@
                 return;
             }
             if (!rawCode.trim()) {
-                alert("Falta el código de los tiempos. Sincronízalo en la pestaña 1 o pega el código manualmente.");
+                alert("Falta el código de los tiempos.");
                 return;
             }
 
+            // Extracción segura (Busca estrictamente lo que está entre [ y ])
             try {
-                let cleanCode = rawCode.replace(/const\s+lyricsData\s*=\s*/, '').replace(/;$/, '');
-                parsedLyricsData = eval('(' + cleanCode + ')');
-                if (!Array.isArray(parsedLyricsData) || parsedLyricsData.length === 0) throw new Error();
+                const startIndex = rawCode.indexOf('[');
+                const endIndex = rawCode.lastIndexOf(']');
+                if(startIndex === -1 || endIndex === -1) throw new Error("No hay corchetes");
+                
+                const arrayString = rawCode.substring(startIndex, endIndex + 1);
+                parsedLyricsData = eval('(' + arrayString + ')');
+                
+                if (!Array.isArray(parsedLyricsData) || parsedLyricsData.length === 0) throw new Error("Arreglo vacío");
             } catch (error) {
-                alert("Error al leer el código. Revisa que el formato sea correcto.");
+                alert("Error crítico al leer el código. Asegúrate de pegar desde el [ hasta el ]");
                 return;
             }
 
             renderLyrics();
-            
             audio.currentTime = 0; 
+            
             audio.play().then(() => {
                 document.getElementById('setupScreen').classList.add('hidden');
                 
-                // Forzamos a que la primera línea se ilumine y se centre inmediatamente
+                // Forzamos la clase activa de forma inmediata
                 currentLineIndex = 0;
+                lineElements.forEach(el => el.classList.remove('active'));
                 lineElements[0].classList.add('active');
-                centerActiveLine(0);
                 
-            }).catch(e => alert("No se pudo reproducir el audio."));
+                setTimeout(() => {
+                    centerActiveLine(0);
+                }, 50);
+
+            }).catch(e => alert("Tu navegador bloqueó el audio. Intenta interactuar con la página primero."));
         }
 
-        // Lógica de actualización de tiempo corregida
+        // MOTOR DE ACTUALIZACIÓN AGRESIVO
         audio.addEventListener('timeupdate', () => {
             if(isSyncing) return; 
             
             const currentTime = audio.currentTime;
-            
-            // Bug solucionado: El índice empieza en 0 para que la primera letra siempre esté esperando iluminada
             let activeIndex = 0; 
             
+            // Permitimos un margen de 0.2 segundos para que la transición se vea más natural
             for (let i = 0; i < parsedLyricsData.length; i++) {
-                if (currentTime >= parsedLyricsData[i].time) {
+                if (currentTime >= parsedLyricsData[i].time - 0.2) {
                     activeIndex = i;
                 } else {
                     break; 
                 }
             }
 
-            if (activeIndex !== currentLineIndex && lineElements[activeIndex]) {
-                if (currentLineIndex !== -1 && lineElements[currentLineIndex]) {
-                    lineElements[currentLineIndex].classList.remove('active');
-                }
+            // Actualizamos SOLO si el índice cambió para no saturar el rendimiento,
+            // PERO usamos fuerza bruta limpiando y añadiendo clases a todos.
+            if (activeIndex !== currentLineIndex) {
                 
-                lineElements[activeIndex].classList.add('active');
+                lineElements.forEach((el, index) => {
+                    if (index === activeIndex) {
+                        el.classList.add('active');
+                    } else {
+                        el.classList.remove('active');
+                    }
+                });
+
                 centerActiveLine(activeIndex);
                 currentLineIndex = activeIndex;
             }
