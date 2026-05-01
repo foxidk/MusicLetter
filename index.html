@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reproductor Premium - Velocidad Dinámica</title>
+    <title>Reproductor Premium - Letras y Resaltado Rojo</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;700;900&display=swap');
 
@@ -55,7 +55,7 @@
             box-shadow: 0 25px 50px rgba(0,0,0,0.5);
             display: flex;
             flex-direction: column;
-            gap: 25px;
+            gap: 20px;
         }
 
         .file-upload-wrapper {
@@ -72,29 +72,57 @@
             background: rgba(0,0,0,0.2);
         }
 
-        .file-upload-wrapper:hover { border-color: #1db954; background: rgba(29, 185, 84, 0.05); }
+        /* Cambiamos los detalles verdes por rojo también en la interfaz */
+        .file-upload-wrapper:hover { border-color: #ff3333; background: rgba(255, 51, 51, 0.05); }
         .file-upload-wrapper input[type="file"] { position: absolute; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
-        .file-upload-text { color: #1db954; font-weight: 700; pointer-events: none; }
+        .file-upload-text { color: #ff3333; font-weight: 700; pointer-events: none; }
 
-        .tabs { display: flex; border-bottom: 1px solid rgba(255,255,255,0.1); margin-bottom: 10px; }
-        .tab { flex: 1; text-align: center; padding: 15px; cursor: pointer; font-weight: 700; color: rgba(255,255,255,0.4); transition: all 0.3s; text-transform: uppercase; }
-        .tab.active { color: #ffffff; border-bottom: 3px solid #1db954; }
+        .panel { display: flex; flex-direction: column; gap: 15px; }
 
-        .panel { display: none; flex-direction: column; gap: 15px; }
-        .panel.active { display: flex; }
+        /* Recordatorio de comando */
+        .helper-text {
+            background: rgba(255, 51, 51, 0.1);
+            border-left: 4px solid #ff3333;
+            padding: 12px 15px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            color: rgba(255, 255, 255, 0.8);
+            line-height: 1.5;
+        }
+        .helper-text span {
+            color: #ff3333;
+            font-weight: 900;
+        }
 
-        textarea { width: 100%; height: 200px; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; padding: 15px; color: #1db954; font-family: monospace; resize: none; outline: none; }
-        textarea:focus { border-color: #1db954; }
+        textarea { 
+            width: 100%; 
+            height: 200px; 
+            background: rgba(0,0,0,0.4); 
+            border: 1px solid rgba(255,255,255,0.1); 
+            border-radius: 10px; 
+            padding: 15px; 
+            color: #ff3333; 
+            font-family: monospace; 
+            resize: none; 
+            outline: none; 
+            transition: border-color 0.3s;
+        }
+        textarea:focus { border-color: #ff3333; }
 
-        .btn-primary { background: #ffffff; color: #000000; border: none; border-radius: 50px; padding: 15px; font-size: 1rem; font-weight: 900; cursor: pointer; transition: all 0.3s; text-transform: uppercase; letter-spacing: 2px; }
-        .btn-primary:hover { transform: scale(1.02); box-shadow: 0 10px 30px rgba(255,255,255,0.2); }
-        .btn-sync { background: #1db954; color: white; }
-        .btn-sync:hover { background: #1ed760; box-shadow: 0 10px 30px rgba(29, 185, 84, 0.4); }
-
-        .sync-live-ui { display: none; text-align: center; padding: 20px; background: rgba(29, 185, 84, 0.1); border-radius: 10px; border: 1px solid rgba(29, 185, 84, 0.3); }
-        .sync-instruction { color: #1db954; font-weight: 700; margin-bottom: 15px; }
-        .sync-current { font-size: 1.5rem; font-weight: 900; margin-bottom: 10px; }
-        .sync-next { color: rgba(255,255,255,0.5); font-size: 0.9rem; }
+        .btn-primary { 
+            background: #ffffff; 
+            color: #000000; 
+            border: none; 
+            border-radius: 50px; 
+            padding: 15px; 
+            font-size: 1rem; 
+            font-weight: 900; 
+            cursor: pointer; 
+            transition: all 0.3s; 
+            text-transform: uppercase; 
+            letter-spacing: 2px; 
+        }
+        .btn-primary:hover { transform: scale(1.02); box-shadow: 0 10px 30px rgba(255, 255, 255, 0.2); }
 
         /* --- REPRODUCTOR INMERSIVO --- */
         .lyrics-wrapper { height: 100vh; width: 100vw; position: relative; overflow: hidden; }
@@ -112,8 +140,13 @@
             flex-wrap: wrap; 
         }
 
-        /* Letra futura */
-        .lyric-line span {
+        .word {
+            display: inline-block;
+            white-space: nowrap; 
+            margin-right: 0.25em; 
+        }
+
+        .char {
             display: inline-block;
             opacity: 0; 
             transform: translateY(20px) scale(0.8);
@@ -122,22 +155,28 @@
             transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); 
         }
 
-        /* Letra activa */
-        .lyric-line.active span {
+        .lyric-line.active .char {
             opacity: 1 !important;
             transform: translateY(0) scale(1.05) !important;
             filter: blur(0px) !important;
             text-shadow: 0 0 20px rgba(255, 255, 255, 0.8), 0 0 40px rgba(255, 255, 255, 0.4) !important;
         }
 
-        /* Letra pasada */
-        .lyric-line.past span {
+        .lyric-line.past .char {
             opacity: 0.15 !important;
             transform: translateY(0) scale(0.9) !important;
             filter: blur(4px) !important;
             text-shadow: none !important;
             transition-delay: 0s !important; 
             transition-duration: 0.5s !important; 
+        }
+
+        /* --- PALABRAS RESALTADAS EN ROJO NEÓN --- */
+        .word.highlight .char {
+            color: #ff3333 !important;
+        }
+        .lyric-line.active .word.highlight .char {
+            text-shadow: 0 0 20px rgba(255, 51, 51, 0.8), 0 0 40px rgba(255, 51, 51, 0.4) !important;
         }
 
         @media (max-width: 768px) {
@@ -150,32 +189,22 @@
 
     <div class="setup-screen" id="setupScreen">
         <div class="setup-box">
-            
             <div class="file-upload-wrapper">
-                <span class="file-upload-text" id="fileNameText">SELECCIONA TU ARCHIVO MP3</span>
+                <span class="file-upload-text" id="fileNameText">1. SELECCIONA TU ARCHIVO MP3</span>
                 <input type="file" id="audioUpload" accept="audio/mp3,audio/wav">
             </div>
 
-            <div class="tabs">
-                <div class="tab" onclick="switchTab('sync')" id="tab-sync">Sincronizar Manual</div>
-                <div class="tab active" onclick="switchTab('play')" id="tab-play">Pegar LRC (Fácil)</div>
-            </div>
-
-            <div class="panel" id="panel-sync">
-                <textarea id="rawLyrics" placeholder="Pega la letra aquí. Una frase por línea."></textarea>
-                <button class="btn-primary btn-sync" id="btnStartSync" onclick="startSyncProcess()">Empezar a Sincronizar</button>
-                <div class="sync-live-ui" id="syncLiveUI">
-                    <div class="sync-instruction">PRESIONA ESPACIO AL ESCUCHAR LA FRASE</div>
-                    <div class="sync-current" id="syncCurrentLine">Cargando...</div>
-                    <div class="sync-next" id="syncNextLine">Siguiente: ...</div>
+            <div class="panel" id="panel-play">
+                <!-- Cajita de recordatorio del comando -->
+                <div class="helper-text">
+                    💡 <b>Comando de color:</b> Envuelve cualquier palabra entre asteriscos para que se pinte de rojo.<br>
+                    Ejemplo: <i>Me has dejado <span>*hecha*</span> <span>*pedazos*</span></i>
                 </div>
-            </div>
 
-            <div class="panel active" id="panel-play">
-                <textarea id="lyricsCodeInput" placeholder="Pega aquí el código que copiaste de internet en formato .LRC (Ej: [00:15.30] Letra de la cancion) o el código autogenerado."></textarea>
+                <textarea id="lyricsCodeInput" placeholder="2. Pega aquí tu código LRC sacado de Lyricsify o internet..."></textarea>
+                
                 <button class="btn-primary" onclick="startImmersiveExperience()">INICIAR MODO INMERSIVO</button>
             </div>
-
         </div>
     </div>
 
@@ -190,18 +219,8 @@
         let parsedLyricsData = [];
         let lineElements = [];
         let currentLineIndex = -1;
-        let isSyncing = false;
-        let rawLines = [], syncIndex = 0, syncedData = [];
 
-        function switchTab(tabId) {
-            document.getElementById('tab-sync').classList.remove('active');
-            document.getElementById('tab-play').classList.remove('active');
-            document.getElementById('panel-sync').classList.remove('active');
-            document.getElementById('panel-play').classList.remove('active');
-            document.getElementById(`tab-${tabId}`).classList.add('active');
-            document.getElementById(`panel-${tabId}`).classList.add('active');
-        }
-
+        // Mostrar nombre del archivo al subir
         document.getElementById('audioUpload').addEventListener('change', function(e) {
             const file = e.target.files[0];
             if (file) {
@@ -210,18 +229,15 @@
             }
         });
 
-        // --- EXTRACTOR UNIVERSAL DE TEXTOS (LRC o JSON) ---
+        // Convertir formato LRC a datos usables
         function parseInputText(text) {
             const results = [];
-            // Intentar leer formato LRC estándar: [00:15.30] Texto
             const lrcRegex = /\[(\d{2}):(\d{2}(?:\.\d{2,3})?)\](.*)/;
             const lines = text.split('\n');
             
-            let isLRC = false;
             lines.forEach(line => {
                 const match = line.match(lrcRegex);
                 if (match) {
-                    isLRC = true;
                     const minutes = parseInt(match[1], 10);
                     const seconds = parseFloat(match[2]);
                     const textContent = match[3].trim();
@@ -230,24 +246,10 @@
                     }
                 }
             });
-
-            if(isLRC && results.length > 0) return results;
-
-            // Si no es LRC, intentar evaluar como el array JSON antiguo
-            try {
-                const startIndex = text.indexOf('[');
-                const endIndex = text.lastIndexOf(']');
-                if(startIndex !== -1 && endIndex !== -1) {
-                    const arrayString = text.substring(startIndex, endIndex + 1);
-                    const evalData = eval('(' + arrayString + ')');
-                    if (Array.isArray(evalData) && evalData.length > 0) return evalData;
-                }
-            } catch(e) {}
-
-            return [];
+            return results;
         }
 
-        // --- RENDERIZADO LETRA POR LETRA CON VELOCIDAD DINÁMICA ---
+        // Crear las líneas y separar por palabras/letras
         function renderLyrics() {
             const lyricsContent = document.getElementById('lyricsContent');
             lyricsContent.innerHTML = ''; 
@@ -262,28 +264,45 @@
                 p.className = 'lyric-line future'; 
                 p.id = `line-${index}`;
                 
-                // MÁGIA: Calculamos el tiempo disponible hasta la siguiente frase
-                let durationToNext = 3; // 3 segundos por defecto si es la última
+                let durationToNext = 3; 
                 if (index < parsedLyricsData.length - 1) {
                     durationToNext = parsedLyricsData[index + 1].time - line.time;
                 }
-                
-                // Evitamos que frases con pausas muy largas sean hiper lentas
                 durationToNext = Math.min(durationToNext, 3.5); 
                 
-                const chars = line.text.split('');
-                // Repartimos el 80% del tiempo disponible entre todas las letras
-                let timePerChar = (durationToNext * 0.8) / chars.length;
+                const cleanText = line.text.replace(/\*/g, '').replace(/ /g, '');
+                const totalChars = cleanText.length;
+                let timePerChar = 0;
                 
-                // Límites: Que no se vea tan rápido que parezca un golpe, ni tan lento que aburra
-                timePerChar = Math.max(0.04, Math.min(timePerChar, 0.12));
+                if(totalChars > 0) {
+                    timePerChar = (durationToNext * 0.8) / totalChars;
+                    timePerChar = Math.max(0.04, Math.min(timePerChar, 0.12));
+                }
 
-                chars.forEach((char, charIdx) => {
-                    const span = document.createElement('span');
-                    span.innerText = char;
-                    if(char === ' ') span.innerHTML = '&nbsp;'; 
-                    span.style.transitionDelay = `${charIdx * timePerChar}s`; 
-                    p.appendChild(span);
+                let globalCharIdx = 0;
+                const words = line.text.split(' ');
+
+                words.forEach(word => {
+                    const wordSpan = document.createElement('span');
+                    wordSpan.className = 'word';
+
+                    // Detectar palabra con asteriscos para resaltado rojo
+                    if (word.includes('*')) {
+                        wordSpan.classList.add('highlight');
+                        word = word.replace(/\*/g, ''); // Quitamos los asteriscos
+                    }
+
+                    const chars = word.split('');
+                    chars.forEach(char => {
+                        const charSpan = document.createElement('span');
+                        charSpan.className = 'char';
+                        charSpan.innerText = char;
+                        charSpan.style.transitionDelay = `${globalCharIdx * timePerChar}s`; 
+                        wordSpan.appendChild(charSpan);
+                        globalCharIdx++;
+                    });
+
+                    p.appendChild(wordSpan);
                 });
 
                 lyricsContent.appendChild(p);
@@ -295,6 +314,7 @@
             lyricsContent.appendChild(spacerBottom);
         }
 
+        // Centrar pantalla
         function centerActiveLine(activeIndex) {
             if (!lineElements[activeIndex]) return;
             const activeLine = lineElements[activeIndex];
@@ -306,15 +326,16 @@
             document.getElementById('lyricsContent').style.transform = `translateY(${translateY}px)`;
         }
 
+        // Iniciar todo
         function startImmersiveExperience() {
             const rawCode = document.getElementById('lyricsCodeInput').value;
             
             if (!audio.src || audio.src === window.location.href) { alert("Falta el MP3."); return; }
-            if (!rawCode.trim()) { alert("Falta el texto de las letras."); return; }
+            if (!rawCode.trim()) { alert("Falta pegar el texto LRC."); return; }
 
             parsedLyricsData = parseInputText(rawCode);
             if(parsedLyricsData.length === 0) {
-                alert("Error crítico. No se detectó formato LRC ni código válido.");
+                alert("Error: Asegúrate de que el texto tenga el formato LRC correcto [00:00.00]");
                 return;
             }
 
@@ -327,12 +348,11 @@
                 lineElements.forEach(el => el.className = 'lyric-line future');
                 lineElements[0].className = 'lyric-line active';
                 setTimeout(() => { centerActiveLine(0); }, 50);
-            }).catch(e => alert("Tu navegador bloqueó el audio."));
+            }).catch(e => alert("Tu navegador bloqueó el audio. Haz clic en cualquier parte de la página primero."));
         }
 
+        // Sincronización en vivo
         audio.addEventListener('timeupdate', () => {
-            if(isSyncing) return; 
-            
             const currentTime = audio.currentTime;
             let activeIndex = 0; 
             
@@ -352,46 +372,6 @@
                 });
                 centerActiveLine(activeIndex);
                 currentLineIndex = activeIndex;
-            }
-        });
-
-        // (Lógica del sincronizador manual reducida para ahorrar espacio visual, sigue 100% funcional)
-        function startSyncProcess() {
-            if (!audio.src || audio.src === window.location.href) return alert("Sube un MP3.");
-            rawLines = document.getElementById('rawLyrics').value.split('\n').map(l=>l.trim()).filter(l=>l.length>0);
-            if (rawLines.length === 0) return alert("Pega letra.");
-            document.getElementById('rawLyrics').style.display = 'none';
-            document.getElementById('btnStartSync').style.display = 'none';
-            document.getElementById('syncLiveUI').style.display = 'block';
-            syncIndex = 0; syncedData = []; isSyncing = true; updateSyncUI();
-            document.activeElement.blur(); audio.currentTime = 0; audio.play();
-        }
-        function updateSyncUI() {
-            if (syncIndex < rawLines.length) {
-                document.getElementById('syncCurrentLine').innerText = rawLines[syncIndex];
-                document.getElementById('syncNextLine').innerText = (syncIndex + 1 < rawLines.length) ? `Sig: ${rawLines[syncIndex + 1]}` : "Fin";
-            } else { finishSync(); }
-        }
-        function finishSync() {
-            isSyncing = false; audio.pause();
-            let code = ""; syncedData.forEach(item => {
-                let min = Math.floor(item.time / 60).toString().padStart(2, '0');
-                let sec = (item.time % 60).toFixed(2).padStart(5, '0');
-                code += `[${min}:${sec}] ${item.text}\n`;
-            });
-            document.getElementById('lyricsCodeInput').value = code;
-            switchTab('play');
-            document.getElementById('rawLyrics').style.display = 'block';
-            document.getElementById('btnStartSync').style.display = 'block';
-            document.getElementById('syncLiveUI').style.display = 'none';
-        }
-        document.addEventListener('keydown', function(e) {
-            if (e.code === 'Space' && isSyncing) {
-                e.preventDefault();
-                if (syncIndex < rawLines.length) {
-                    syncedData.push({ time: audio.currentTime, text: rawLines[syncIndex] });
-                    syncIndex++; updateSyncUI();
-                }
             }
         });
     </script>
