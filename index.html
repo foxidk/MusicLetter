@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reproductor Inmersivo Premium</title>
+    <title>Reproductor Premium All-in-One</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800&display=swap');
 
         * {
             margin: 0;
@@ -24,14 +24,14 @@
             -webkit-user-select: none;
         }
 
-        /* PANEL DE CONFIGURACIÓN INICIAL */
+        /* --- PANEL DE CONFIGURACIÓN (HUB) --- */
         .setup-screen {
             position: fixed;
             top: 0;
             left: 0;
             width: 100vw;
             height: 100vh;
-            background: linear-gradient(135deg, #0f0f0f 0%, #1a1a1a 100%);
+            background: linear-gradient(135deg, #0a0a0a 0%, #171717 100%);
             display: flex;
             justify-content: center;
             align-items: center;
@@ -51,23 +51,13 @@
             padding: 40px;
             border-radius: 20px;
             width: 90%;
-            max-width: 600px;
+            max-width: 700px;
             box-shadow: 0 25px 50px rgba(0,0,0,0.5);
             display: flex;
             flex-direction: column;
-            gap: 20px;
+            gap: 25px;
         }
 
-        .setup-box h2 {
-            font-weight: 800;
-            font-size: 1.8rem;
-            text-align: center;
-            margin-bottom: 10px;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-        }
-
-        /* Estilización del input de archivo */
         .file-upload-wrapper {
             position: relative;
             width: 100%;
@@ -78,7 +68,8 @@
             justify-content: center;
             align-items: center;
             cursor: pointer;
-            transition: border-color 0.3s, background 0.3s;
+            transition: all 0.3s;
+            background: rgba(0,0,0,0.2);
         }
 
         .file-upload-wrapper:hover {
@@ -95,51 +86,101 @@
         }
 
         .file-upload-text {
-            color: rgba(255,255,255,0.7);
-            font-weight: 400;
+            color: #1db954;
+            font-weight: 600;
             pointer-events: none;
         }
 
-        /* Área de texto para el código */
+        /* --- TABS --- */
+        .tabs {
+            display: flex;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            margin-bottom: 10px;
+        }
+
+        .tab {
+            flex: 1;
+            text-align: center;
+            padding: 15px;
+            cursor: pointer;
+            font-weight: 600;
+            color: rgba(255,255,255,0.4);
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .tab.active {
+            color: #ffffff;
+            border-bottom: 2px solid #1db954;
+        }
+
+        .panel {
+            display: none;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .panel.active {
+            display: flex;
+        }
+
+        /* --- ELEMENTOS DE LOS PANELES --- */
         textarea {
             width: 100%;
-            height: 200px;
-            background: rgba(0,0,0,0.3);
+            height: 180px;
+            background: rgba(0,0,0,0.4);
             border: 1px solid rgba(255,255,255,0.1);
             border-radius: 10px;
             padding: 15px;
-            color: #1db954;
+            color: #fff;
             font-family: monospace;
             resize: none;
             outline: none;
             transition: border-color 0.3s;
         }
 
-        textarea:focus {
-            border-color: #1db954;
-        }
+        textarea:focus { border-color: #1db954; }
+        
+        #lyricsCodeInput { color: #1db954; }
 
-        .play-btn {
+        .btn-primary {
             background: #ffffff;
             color: #000000;
             border: none;
             border-radius: 50px;
-            padding: 18px;
-            font-size: 1.2rem;
+            padding: 15px;
+            font-size: 1rem;
             font-weight: 800;
             cursor: pointer;
-            transition: transform 0.3s, box-shadow 0.3s;
+            transition: all 0.3s;
             text-transform: uppercase;
             letter-spacing: 2px;
-            margin-top: 10px;
         }
 
-        .play-btn:hover {
+        .btn-primary:hover {
             transform: scale(1.02);
             box-shadow: 0 10px 30px rgba(255,255,255,0.2);
         }
 
-        /* REPRODUCTOR INMERSIVO */
+        .btn-sync { background: #1db954; color: white; }
+        .btn-sync:hover { background: #1ed760; box-shadow: 0 10px 30px rgba(29, 185, 84, 0.4); }
+
+        /* UI de Sincronización en vivo */
+        .sync-live-ui {
+            display: none;
+            text-align: center;
+            padding: 20px;
+            background: rgba(29, 185, 84, 0.1);
+            border-radius: 10px;
+            border: 1px solid rgba(29, 185, 84, 0.3);
+        }
+        
+        .sync-instruction { color: #1db954; font-weight: bold; margin-bottom: 15px; }
+        .sync-current { font-size: 1.5rem; font-weight: 800; margin-bottom: 10px; }
+        .sync-next { color: rgba(255,255,255,0.5); font-size: 0.9rem; }
+
+        /* --- REPRODUCTOR INMERSIVO --- */
         .lyrics-wrapper {
             height: 100vh;
             width: 100vw;
@@ -178,7 +219,7 @@
         }
 
         @media (max-width: 768px) {
-            .setup-box { padding: 25px; }
+            .setup-box { padding: 25px; width: 95%; }
             .lyric-line { font-size: 6vw; padding: 5vh 10px; }
             .lyric-line.active { font-size: 8vw; }
         }
@@ -186,40 +227,76 @@
 </head>
 <body>
 
-    <!-- Panel de configuración -->
+    <!-- HUB PRINCIPAL -->
     <div class="setup-screen" id="setupScreen">
         <div class="setup-box">
-            <h2>Cargar Canción</h2>
             
             <div class="file-upload-wrapper">
-                <span class="file-upload-text" id="fileNameText">1. Selecciona tu archivo MP3</span>
+                <span class="file-upload-text" id="fileNameText">SELECCIONA TU ARCHIVO MP3</span>
                 <input type="file" id="audioUpload" accept="audio/mp3,audio/wav">
             </div>
 
-            <textarea id="lyricsCodeInput" placeholder='2. Pega aquí el resultado del sincronizador (ej: const lyricsData = [...])'></textarea>
+            <div class="tabs">
+                <div class="tab active" onclick="switchTab('sync')" id="tab-sync">1. Crear Tiempos</div>
+                <div class="tab" onclick="switchTab('play')" id="tab-play">2. Reproductor</div>
+            </div>
 
-            <button class="play-btn" onclick="startExperience()">INICIAR EXPERIENCIA</button>
+            <!-- PANEL 1: SINCRONIZADOR -->
+            <div class="panel active" id="panel-sync">
+                <textarea id="rawLyrics" placeholder="Pega la letra de tu canción aquí. Una frase por línea."></textarea>
+                <button class="btn-primary btn-sync" id="btnStartSync" onclick="startSyncProcess()">Empezar a Sincronizar</button>
+                
+                <div class="sync-live-ui" id="syncLiveUI">
+                    <div class="sync-instruction">PRESIONA LA BARRA ESPACIADORA AL ESCUCHAR LA FRASE</div>
+                    <div class="sync-current" id="syncCurrentLine">Cargando...</div>
+                    <div class="sync-next" id="syncNextLine">Siguiente: ...</div>
+                </div>
+            </div>
+
+            <!-- PANEL 2: REPRODUCTOR (PEGA CÓDIGO) -->
+            <div class="panel" id="panel-play">
+                <textarea id="lyricsCodeInput" placeholder="Aquí aparecerá el código generado automáticamente, o puedes pegar uno que ya tengas guardado."></textarea>
+                <button class="btn-primary" onclick="startImmersiveExperience()">INICIAR MODO INMERSIVO</button>
+            </div>
+
         </div>
     </div>
 
-    <!-- Contenedor del reproductor -->
+    <!-- AUDIO INVISIBLE -->
+    <audio id="audioElement"></audio>
+
+    <!-- CONTENEDOR DEL REPRODUCTOR INMERSIVO -->
     <div class="lyrics-wrapper">
         <div class="lyrics-content" id="lyricsContent">
             <!-- JS inyecta las líneas -->
         </div>
     </div>
 
-    <audio id="audioElement"></audio>
-
     <script>
-        let currentLineIndex = -1;
-        let lineElements = [];
-        let parsedLyricsData = [];
+        // Variables globales
         const audio = document.getElementById('audioElement');
-        const lyricsContent = document.getElementById('lyricsContent');
-        const setupScreen = document.getElementById('setupScreen');
+        let parsedLyricsData = [];
+        let lineElements = [];
+        let currentLineIndex = -1;
 
-        // Actualizar el nombre del archivo al seleccionarlo
+        // Variables de Sincronización
+        let rawLines = [];
+        let syncIndex = 0;
+        let syncedData = [];
+        let isSyncing = false;
+
+        // --- MANEJO DE TABS ---
+        function switchTab(tabId) {
+            document.getElementById('tab-sync').classList.remove('active');
+            document.getElementById('tab-play').classList.remove('active');
+            document.getElementById('panel-sync').classList.remove('active');
+            document.getElementById('panel-play').classList.remove('active');
+
+            document.getElementById(`tab-${tabId}`).classList.add('active');
+            document.getElementById(`panel-${tabId}`).classList.add('active');
+        }
+
+        // --- CARGA DE AUDIO ---
         document.getElementById('audioUpload').addEventListener('change', function(e) {
             const file = e.target.files[0];
             if (file) {
@@ -228,8 +305,91 @@
             }
         });
 
+        // --- LÓGICA DE SINCRONIZACIÓN ---
+        function startSyncProcess() {
+            if (!audio.src || audio.src === window.location.href) {
+                alert("Primero debes seleccionar un archivo MP3.");
+                return;
+            }
+
+            const rawText = document.getElementById('rawLyrics').value;
+            rawLines = rawText.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+            
+            if (rawLines.length === 0) {
+                alert("Pega alguna letra en el cuadro primero.");
+                return;
+            }
+
+            // Preparar UI
+            document.getElementById('rawLyrics').style.display = 'none';
+            document.getElementById('btnStartSync').style.display = 'none';
+            document.getElementById('syncLiveUI').style.display = 'block';
+            
+            syncIndex = 0;
+            syncedData = [];
+            isSyncing = true;
+            updateSyncUI();
+
+            // Desenfocar cualquier elemento activo para que el espacio funcione bien
+            document.activeElement.blur(); 
+            
+            // Iniciar audio
+            audio.currentTime = 0;
+            audio.play();
+        }
+
+        function updateSyncUI() {
+            if (syncIndex < rawLines.length) {
+                document.getElementById('syncCurrentLine').innerText = rawLines[syncIndex];
+                document.getElementById('syncNextLine').innerText = 
+                    (syncIndex + 1 < rawLines.length) ? `Sig: ${rawLines[syncIndex + 1]}` : "Última línea";
+            } else {
+                finishSync();
+            }
+        }
+
+        function finishSync() {
+            isSyncing = false;
+            audio.pause();
+            
+            // Generar código JSON en formato texto
+            let code = "const lyricsData = [\n";
+            syncedData.forEach((item, idx) => {
+                const isLast = idx === syncedData.length - 1;
+                const safeText = item.text.replace(/"/g, '\\"');
+                code += `    { time: ${item.time}, text: "${safeText}" }${isLast ? '' : ','}\n`;
+            });
+            code += "];";
+
+            // Pegar automáticamente en la pestaña 2 y cambiar de pestaña
+            document.getElementById('lyricsCodeInput').value = code;
+            switchTab('play');
+
+            // Restaurar UI de sincronización por si quieren volver a intentarlo
+            document.getElementById('rawLyrics').style.display = 'block';
+            document.getElementById('btnStartSync').style.display = 'block';
+            document.getElementById('syncLiveUI').style.display = 'none';
+        }
+
+        // Escuchar tecla Espacio para sincronizar
+        document.addEventListener('keydown', function(event) {
+            if (event.code === 'Space' && isSyncing) {
+                event.preventDefault(); // Evita que la página baje
+                
+                if (syncIndex < rawLines.length) {
+                    const time = parseFloat(audio.currentTime.toFixed(1));
+                    syncedData.push({ time: time, text: rawLines[syncIndex] });
+                    syncIndex++;
+                    updateSyncUI();
+                }
+            }
+        });
+
+
+        // --- LÓGICA DEL REPRODUCTOR INMERSIVO ---
         function renderLyrics() {
-            lyricsContent.innerHTML = ''; // Limpiar por si acaso
+            const lyricsContent = document.getElementById('lyricsContent');
+            lyricsContent.innerHTML = ''; 
             lineElements = [];
 
             const spacerTop = document.createElement('div');
@@ -258,37 +418,36 @@
             const lineHeight = activeLine.clientHeight;
             
             const translateY = (containerHeight / 2) - lineOffset - (lineHeight / 2);
-            lyricsContent.style.transform = `translateY(${translateY}px)`;
+            document.getElementById('lyricsContent').style.transform = `translateY(${translateY}px)`;
         }
 
-        function startExperience() {
+        function startImmersiveExperience() {
             const rawCode = document.getElementById('lyricsCodeInput').value;
             
-            // Validar que subió audio y código
-            if (!audio.src || !rawCode.trim()) {
-                alert("Por favor sube un archivo MP3 y pega el código de los tiempos.");
+            if (!audio.src || audio.src === window.location.href) {
+                alert("Falta seleccionar el archivo MP3.");
+                return;
+            }
+            if (!rawCode.trim()) {
+                alert("Falta el código de los tiempos. Sincronízalo en la pestaña 1 o pega el código manualmente.");
                 return;
             }
 
             try {
-                // Limpiamos el texto por si pegaron el "const lyricsData ="
                 let cleanCode = rawCode.replace(/const\s+lyricsData\s*=\s*/, '').replace(/;$/, '');
-                
-                // Evaluamos el arreglo pegado
                 parsedLyricsData = eval('(' + cleanCode + ')');
-                
                 if (!Array.isArray(parsedLyricsData)) throw new Error();
-
             } catch (error) {
-                alert("Error al leer el código. Asegúrate de copiar y pegar exactamente el código verde del sincronizador.");
+                alert("Error al leer el código. Revisa que el formato sea correcto.");
                 return;
             }
 
-            // Iniciar renderizado y reproducción
+            // Iniciar experiencia visual
             renderLyrics();
             
+            audio.currentTime = 0; // Reiniciar por si venimos del sincronizador
             audio.play().then(() => {
-                setupScreen.classList.add('hidden');
+                document.getElementById('setupScreen').classList.add('hidden');
                 
                 setTimeout(() => {
                     if(lineElements.length > 0) {
@@ -297,14 +456,16 @@
                         currentLineIndex = 0;
                     }
                 }, 100);
-            }).catch(e => alert("No se pudo reproducir el audio."));
+            }).catch(e => alert("No se pudo reproducir el audio automáticamente."));
         }
 
-        // Sincronización en tiempo real
+        // Sincronización visual en tiempo real
         audio.addEventListener('timeupdate', () => {
-            const currentTime = audio.currentTime;
+            if(isSyncing) return; // Si estamos en modo creador, ignoramos la animación
             
+            const currentTime = audio.currentTime;
             let activeIndex = -1;
+            
             for (let i = 0; i < parsedLyricsData.length; i++) {
                 if (currentTime >= parsedLyricsData[i].time) {
                     activeIndex = i;
