@@ -3,174 +3,324 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sincronizador de Letras</title>
+    <title>Reproductor Inmersivo Premium</title>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;800&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Montserrat', sans-serif;
+        }
+
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: #121212;
-            color: white;
-            padding: 20px;
+            background-color: #050505; 
+            color: #ffffff;
+            overflow: hidden; 
+            height: 100vh;
+            width: 100vw;
+            user-select: none; 
+            -webkit-user-select: none;
+        }
+
+        /* PANEL DE CONFIGURACIÓN INICIAL */
+        .setup-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: linear-gradient(135deg, #0f0f0f 0%, #1a1a1a 100%);
             display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 200;
+            transition: opacity 0.8s ease, visibility 0.8s;
+        }
+
+        .setup-screen.hidden {
+            opacity: 0;
+            visibility: hidden;
+        }
+
+        .setup-box {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 40px;
+            border-radius: 20px;
+            width: 90%;
+            max-width: 600px;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.5);
+            display: flex;
+            flex-direction: column;
             gap: 20px;
         }
-        .panel {
-            flex: 1;
-            background: #1e1e1e;
-            padding: 20px;
-            border-radius: 10px;
+
+        .setup-box h2 {
+            font-weight: 800;
+            font-size: 1.8rem;
+            text-align: center;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
         }
+
+        /* Estilización del input de archivo */
+        .file-upload-wrapper {
+            position: relative;
+            width: 100%;
+            height: 60px;
+            border: 2px dashed rgba(255,255,255,0.2);
+            border-radius: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: border-color 0.3s, background 0.3s;
+        }
+
+        .file-upload-wrapper:hover {
+            border-color: #1db954;
+            background: rgba(29, 185, 84, 0.05);
+        }
+
+        .file-upload-wrapper input[type="file"] {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        .file-upload-text {
+            color: rgba(255,255,255,0.7);
+            font-weight: 400;
+            pointer-events: none;
+        }
+
+        /* Área de texto para el código */
         textarea {
             width: 100%;
-            height: 300px;
-            background: #2a2a2a;
-            color: white;
-            border: 1px solid #444;
-            padding: 10px;
-            font-family: monospace;
-            margin-bottom: 10px;
-        }
-        button {
-            background: #1db954;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            cursor: pointer;
-            border-radius: 5px;
-            font-weight: bold;
-        }
-        button:hover { background: #1ed760; }
-        .current-line {
-            font-size: 2em;
-            color: #1db954;
-            margin: 20px 0;
-            text-align: center;
-            font-weight: bold;
-        }
-        .next-line {
-            font-size: 1.2em;
-            color: #888;
-            text-align: center;
-        }
-        #outputCode {
-            white-space: pre-wrap;
-            background: #000;
+            height: 200px;
+            background: rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 10px;
             padding: 15px;
-            color: #0f0;
+            color: #1db954;
             font-family: monospace;
-            border-radius: 5px;
-            height: 300px;
-            overflow-y: auto;
+            resize: none;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        textarea:focus {
+            border-color: #1db954;
+        }
+
+        .play-btn {
+            background: #ffffff;
+            color: #000000;
+            border: none;
+            border-radius: 50px;
+            padding: 18px;
+            font-size: 1.2rem;
+            font-weight: 800;
+            cursor: pointer;
+            transition: transform 0.3s, box-shadow 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-top: 10px;
+        }
+
+        .play-btn:hover {
+            transform: scale(1.02);
+            box-shadow: 0 10px 30px rgba(255,255,255,0.2);
+        }
+
+        /* REPRODUCTOR INMERSIVO */
+        .lyrics-wrapper {
+            height: 100vh;
+            width: 100vw;
+            position: relative;
+            display: flex;
+            align-items: center; 
+        }
+
+        .lyrics-content {
+            width: 100%;
+            transition: transform 0.8s cubic-bezier(0.25, 1, 0.5, 1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .lyric-line {
+            font-size: 3vw; 
+            color: rgba(255, 255, 255, 0.15); 
+            text-align: center;
+            transition: all 0.5s ease;
+            text-transform: uppercase;
+            padding: 6vh 20px; 
+            filter: blur(5px); 
+            opacity: 0.3;
+            width: 90%; 
+        }
+
+        .lyric-line.active {
+            color: #ffffff;
+            font-size: 5vw; 
+            transform: scale(1.1);
+            filter: blur(0px); 
+            opacity: 1;
+            text-shadow: 0 0 30px rgba(255, 255, 255, 0.6); 
+        }
+
+        @media (max-width: 768px) {
+            .setup-box { padding: 25px; }
+            .lyric-line { font-size: 6vw; padding: 5vh 10px; }
+            .lyric-line.active { font-size: 8vw; }
         }
     </style>
 </head>
 <body>
 
-    <div class="panel">
-        <h2>1. Pega tu letra aquí</h2>
-        <p>Una frase por línea.</p>
-        <textarea id="rawLyrics">Intro musical...
-Escribe aquí tu primera línea
-Y aquí la segunda
-Sigue el ritmo
-Presiona espacio para marcar el tiempo</textarea>
-        
-        <h2>2. Selecciona tu audio local</h2>
-        <input type="file" id="audioUpload" accept="audio/mp3,audio/wav" style="margin-bottom: 15px;">
-        <br>
-        <audio id="audioPlayer" controls></audio>
-        <br><br>
-        <button onclick="startSync()">Iniciar Sincronización</button>
+    <!-- Panel de configuración -->
+    <div class="setup-screen" id="setupScreen">
+        <div class="setup-box">
+            <h2>Cargar Canción</h2>
+            
+            <div class="file-upload-wrapper">
+                <span class="file-upload-text" id="fileNameText">1. Selecciona tu archivo MP3</span>
+                <input type="file" id="audioUpload" accept="audio/mp3,audio/wav">
+            </div>
+
+            <textarea id="lyricsCodeInput" placeholder='2. Pega aquí el resultado del sincronizador (ej: const lyricsData = [...])'></textarea>
+
+            <button class="play-btn" onclick="startExperience()">INICIAR EXPERIENCIA</button>
+        </div>
     </div>
 
-    <div class="panel" id="syncPanel" style="display: none;">
-        <h2>3. Sincroniza</h2>
-        <p>Reproduce el audio y presiona <b>[ESPACIO]</b> justo cuando escuches la frase en verde.</p>
-        
-        <div class="current-line" id="currentLineDisplay">Cargando...</div>
-        <div class="next-line" id="nextLineDisplay">Siguiente: ...</div>
-
-        <h2 style="margin-top: 40px;">4. Resultado (Copia esto en tu reproductor premium)</h2>
-        <div id="outputCode">const lyricsData = [];</div>
+    <!-- Contenedor del reproductor -->
+    <div class="lyrics-wrapper">
+        <div class="lyrics-content" id="lyricsContent">
+            <!-- JS inyecta las líneas -->
+        </div>
     </div>
+
+    <audio id="audioElement"></audio>
 
     <script>
-        let lines = [];
-        let currentIndex = 0;
-        let syncedData = [];
-        const audioPlayer = document.getElementById('audioPlayer');
+        let currentLineIndex = -1;
+        let lineElements = [];
+        let parsedLyricsData = [];
+        const audio = document.getElementById('audioElement');
+        const lyricsContent = document.getElementById('lyricsContent');
+        const setupScreen = document.getElementById('setupScreen');
 
-        // Cargar audio local para no tener que subirlo aún
+        // Actualizar el nombre del archivo al seleccionarlo
         document.getElementById('audioUpload').addEventListener('change', function(e) {
             const file = e.target.files[0];
             if (file) {
-                audioPlayer.src = URL.createObjectURL(file);
+                document.getElementById('fileNameText').innerText = file.name;
+                audio.src = URL.createObjectURL(file);
             }
         });
 
-        function startSync() {
-            const rawText = document.getElementById('rawLyrics').value;
-            // Separar por saltos de línea y quitar líneas vacías
-            lines = rawText.split('\n').map(line => line.trim()).filter(line => line.length > 0);
+        function renderLyrics() {
+            lyricsContent.innerHTML = ''; // Limpiar por si acaso
+            lineElements = [];
+
+            const spacerTop = document.createElement('div');
+            spacerTop.style.height = '45vh';
+            lyricsContent.appendChild(spacerTop);
+
+            parsedLyricsData.forEach((line, index) => {
+                const p = document.createElement('p');
+                p.className = 'lyric-line';
+                p.id = `line-${index}`;
+                p.innerText = line.text;
+                lyricsContent.appendChild(p);
+                lineElements.push(p);
+            });
+
+            const spacerBottom = document.createElement('div');
+            spacerBottom.style.height = '45vh';
+            lyricsContent.appendChild(spacerBottom);
+        }
+
+        function centerActiveLine(activeIndex) {
+            if (!lineElements[activeIndex]) return;
+            const activeLine = lineElements[activeIndex];
+            const containerHeight = document.querySelector('.lyrics-wrapper').clientHeight;
+            const lineOffset = activeLine.offsetTop;
+            const lineHeight = activeLine.clientHeight;
             
-            if (lines.length === 0) {
-                alert("Pega alguna letra primero.");
+            const translateY = (containerHeight / 2) - lineOffset - (lineHeight / 2);
+            lyricsContent.style.transform = `translateY(${translateY}px)`;
+        }
+
+        function startExperience() {
+            const rawCode = document.getElementById('lyricsCodeInput').value;
+            
+            // Validar que subió audio y código
+            if (!audio.src || !rawCode.trim()) {
+                alert("Por favor sube un archivo MP3 y pega el código de los tiempos.");
                 return;
             }
 
-            currentIndex = 0;
-            syncedData = [];
-            document.getElementById('syncPanel').style.display = 'block';
-            updateDisplay();
-            updateOutput();
-            
-            // Foco en la ventana para asegurar que capte la barra espaciadora
-            window.focus();
-        }
+            try {
+                // Limpiamos el texto por si pegaron el "const lyricsData ="
+                let cleanCode = rawCode.replace(/const\s+lyricsData\s*=\s*/, '').replace(/;$/, '');
+                
+                // Evaluamos el arreglo pegado
+                parsedLyricsData = eval('(' + cleanCode + ')');
+                
+                if (!Array.isArray(parsedLyricsData)) throw new Error();
 
-        function updateDisplay() {
-            if (currentIndex < lines.length) {
-                document.getElementById('currentLineDisplay').innerText = lines[currentIndex];
-                document.getElementById('nextLineDisplay').innerText = 
-                    (currentIndex + 1 < lines.length) ? `Siguiente: ${lines[currentIndex + 1]}` : "Fin de la canción";
-            } else {
-                document.getElementById('currentLineDisplay').innerText = "¡Sincronización terminada!";
-                document.getElementById('nextLineDisplay').innerText = "";
+            } catch (error) {
+                alert("Error al leer el código. Asegúrate de copiar y pegar exactamente el código verde del sincronizador.");
+                return;
             }
+
+            // Iniciar renderizado y reproducción
+            renderLyrics();
+            
+            audio.play().then(() => {
+                setupScreen.classList.add('hidden');
+                
+                setTimeout(() => {
+                    if(lineElements.length > 0) {
+                        centerActiveLine(0);
+                        lineElements[0].classList.add('active');
+                        currentLineIndex = 0;
+                    }
+                }, 100);
+            }).catch(e => alert("No se pudo reproducir el audio."));
         }
 
-        function updateOutput() {
-            let code = "const lyricsData = [\n";
-            syncedData.forEach((item, index) => {
-                const isLast = index === syncedData.length - 1;
-                // Escapar comillas dobles en el texto por si acaso
-                const safeText = item.text.replace(/"/g, '\\"');
-                code += `    { time: ${item.time}, text: "${safeText}" }${isLast ? '' : ','}\n`;
-            });
-            code += "];";
-            document.getElementById('outputCode').innerText = code;
-        }
-
-        // Escuchar la barra espaciadora
-        document.addEventListener('keydown', function(event) {
-            if (event.code === 'Space' && document.getElementById('syncPanel').style.display === 'block') {
-                // Prevenir que la barra espaciadora pause el reproductor de audio por defecto
-                if(document.activeElement !== audioPlayer) {
-                    event.preventDefault();
+        // Sincronización en tiempo real
+        audio.addEventListener('timeupdate', () => {
+            const currentTime = audio.currentTime;
+            
+            let activeIndex = -1;
+            for (let i = 0; i < parsedLyricsData.length; i++) {
+                if (currentTime >= parsedLyricsData[i].time) {
+                    activeIndex = i;
+                } else {
+                    break; 
                 }
+            }
 
-                if (currentIndex < lines.length && !audioPlayer.paused) {
-                    // Guardar el tiempo actual con 1 decimal
-                    const time = parseFloat(audioPlayer.currentTime.toFixed(1));
-                    
-                    syncedData.push({
-                        time: time,
-                        text: lines[currentIndex]
-                    });
-
-                    currentIndex++;
-                    updateDisplay();
-                    updateOutput();
+            if (activeIndex !== currentLineIndex && activeIndex !== -1) {
+                if (currentLineIndex !== -1 && lineElements[currentLineIndex]) {
+                    lineElements[currentLineIndex].classList.remove('active');
                 }
+                
+                lineElements[activeIndex].classList.add('active');
+                centerActiveLine(activeIndex);
+                currentLineIndex = activeIndex;
             }
         });
     </script>
