@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reproductor Premium - Ambient & Cinemático</title>
+    <title>Reproductor Premium - Notas Elegantes</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;700;900&display=swap');
 
@@ -24,21 +24,19 @@
             -webkit-user-select: none;
         }
 
-        /* --- FONDO AMBIENT MODE CORREGIDO --- */
+        /* --- FONDO AMBIENT MODE --- */
         #ambient-bg {
             position: fixed;
             top: 0; left: 0; width: 100vw; height: 100vh;
             background: linear-gradient(135deg, #0a0a0a 0%, #171717 100%);
             background-size: cover;
             background-position: center;
-            /* Redujimos el blur para que la portada sea visible */
             filter: blur(15px); 
             transform: scale(1.1); 
             z-index: 0;
             transition: background-image 2s ease-in-out;
         }
 
-        /* Capa oscura superpuesta para que las letras sigan resaltando */
         #ambient-bg::after {
             content: '';
             position: absolute;
@@ -54,7 +52,7 @@
             backdrop-filter: blur(30px);
             display: flex; justify-content: center; align-items: center;
             z-index: 200;
-            transition: opacity 0.4s ease, visibility 0.4s; /* Transición más rápida al salir/entrar */
+            transition: opacity 0.4s ease, visibility 0.4s;
         }
         .setup-screen.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
 
@@ -106,7 +104,6 @@
             transition: width 0.1s linear;
         }
 
-        /* Indicador sutil de ESC */
         .esc-hint {
             position: fixed; top: 20px; left: 20px; color: rgba(255,255,255,0.3);
             font-size: 0.8rem; font-weight: 700; z-index: 100; letter-spacing: 1px;
@@ -119,7 +116,8 @@
 
         .lyric-line {
             font-size: 5vw; font-weight: 900; text-align: center; text-transform: uppercase;
-            padding: 6vh 20px; width: 90%; display: flex; justify-content: center; flex-wrap: wrap; 
+            /* ACHICAMOS EL ANCHO DEL TEXTO AL 80% PARA DARLE ESPACIO A LAS NOTAS MUSICALES */
+            padding: 6vh 20px; width: 80%; display: flex; justify-content: center; flex-wrap: wrap; 
         }
         .word { display: inline-block; white-space: nowrap; margin-right: 0.25em; }
         
@@ -152,8 +150,18 @@
             50% { transform: scale(1.1); opacity: 0.8; text-shadow: 0 0 30px rgba(255,51,51,0.5); color: #ff3333; }
         }
 
+        /* --- PARTÍCULAS MUSICALES ELEGANTES --- */
         #particles-container { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 1; }
-        .particle { position: absolute; color: rgba(255, 255, 255, 0.15); filter: blur(1px); animation: floatUp ease-in-out forwards; }
+        
+        .particle { 
+            position: absolute; 
+            color: rgba(255, 255, 255, 0.15); 
+            filter: blur(1px); 
+            animation: floatUp ease-in-out forwards;
+            font-family: Arial, sans-serif; /* Fuente limpia para los símbolos */
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
+        }
+        
         @keyframes floatUp {
             0% { transform: translateY(10vh) scale(0.5) rotate(0deg); opacity: 0; }
             20% { opacity: 0.4; }
@@ -163,7 +171,7 @@
         @media (max-width: 768px) {
             .upload-row { flex-direction: column; }
             .setup-box { padding: 25px; width: 95%; }
-            .lyric-line { font-size: 8vw; padding: 5vh 10px; }
+            .lyric-line { font-size: 8vw; padding: 5vh 10px; width: 90%; }
         }
     </style>
 </head>
@@ -224,7 +232,6 @@
         // Función para la tecla ESC
         document.addEventListener('keydown', (event) => {
             if (event.key === 'Escape' || event.keyCode === 27) {
-                // Solo actuamos si la pantalla de configuración está oculta (es decir, estamos en modo inmersivo)
                 if (setupScreen.classList.contains('hidden')) {
                     audio.pause();
                     setupScreen.classList.remove('hidden');
@@ -337,8 +344,10 @@
             document.getElementById('lyricsContent').style.transform = `translateY(${translateY}px)`;
         }
 
+        // --- SISTEMA DE PARTÍCULAS MEJORADO (Zonas Laterales Estrictas) ---
         function spawnParticles() {
-            const symbols = ['🎵', '🎶', '✨'];
+            // Usamos caracteres tipográficos de notas musicales para un look más elegante y menos "emoji"
+            const symbols = ['♪', '♫', '♬'];
             const particleCount = Math.floor(Math.random() * 3) + 2; 
 
             for (let i = 0; i < particleCount; i++) {
@@ -347,11 +356,15 @@
                 particle.innerText = symbols[Math.floor(Math.random() * symbols.length)];
 
                 const isLeft = Math.random() > 0.5;
-                const positionX = isLeft ? (Math.random() * 15 + 5) : (Math.random() * 15 + 80);
+                
+                // ZONA SEGURA: 
+                // Izquierda: entre 2vw y 12vw
+                // Derecha: entre 88vw y 98vw
+                const positionX = isLeft ? (Math.random() * 10 + 2) : (Math.random() * 10 + 88);
                 
                 particle.style.left = `${positionX}vw`;
                 particle.style.top = `${Math.random() * 20 + 60}vh`; 
-                particle.style.fontSize = `${Math.random() * 2 + 1.5}vw`; 
+                particle.style.fontSize = `${Math.random() * 2 + 2}vw`; // Un poco más grandes para que se noten bien
                 particle.style.animationDuration = `${Math.random() * 4 + 5}s`; 
 
                 particlesContainer.appendChild(particle);
@@ -374,7 +387,7 @@
             
             audio.play().then(() => {
                 setupScreen.classList.add('hidden');
-                escHint.style.display = 'block'; // Mostrar el texto de pista
+                escHint.style.display = 'block'; 
                 
                 currentLineIndex = 0;
                 lineElements.forEach(el => el.className = 'lyric-line future');
