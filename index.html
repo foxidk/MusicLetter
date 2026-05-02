@@ -25,8 +25,7 @@
         #player-frame {
             position: relative; width: 100vw; height: 100vh;
             overflow: hidden; background: #030303; container-type: inline-size; 
-            will-change: transform, filter; 
-            transform: translate3d(0,0,0); 
+            will-change: filter; 
         }
 
         #player-frame.changing-filter { transition: filter 0.5s ease; }
@@ -182,7 +181,7 @@
         .f-bebas { font-family: 'Bebas Neue', sans-serif; font-size: 1.2rem; letter-spacing: 2px;}
         .f-anton { font-family: 'Anton', sans-serif; font-size: 1.1rem; letter-spacing: 1px;}
 
-        /* --- LETRAS CINEMÁTICAS OPTIMIZADAS --- */
+        /* --- LETRAS CINEMÁTICAS --- */
         .lyrics-wrapper { height: 100%; width: 100%; position: relative; overflow: hidden; z-index: 10; perspective: 1000px; }
         .lyrics-content { width: 100%; position: relative; transition: transform 0.6s cubic-bezier(0.25, 1, 0.5, 1); display: flex; flex-direction: column; align-items: center; will-change: transform; }
 
@@ -319,14 +318,6 @@
         const settingsToggle = document.getElementById('settingsToggle');
         const settingsPanel = document.getElementById('settingsPanel');
 
-        let audioCtx, analyser, source;
-        let dataArray;
-        let shakeEnabled = false;
-        
-        // Variables para el impacto real del Shake
-        let currentShake = 0;
-        let previousBass = 0;
-
         let currentFilterIndex = 0;
         const filters = ['none', 'vhs', 'sepia'];
 
@@ -351,7 +342,6 @@
                     escHint.style.display = 'none';
                     settingsToggle.style.display = 'none';
                     settingsPanel.classList.remove('open');
-                    shakeEnabled = false; 
                 }
             }
             
@@ -378,51 +368,6 @@
 
         document.getElementById('audioUpload').addEventListener('change', function(e) { const file = e.target.files[0]; if (file) { document.getElementById('fileNameText').innerText = file.name.substring(0, 15) + '...'; audio.src = URL.createObjectURL(file); } });
         document.getElementById('coverUpload').addEventListener('change', function(e) { const file = e.target.files[0]; if (file) { document.getElementById('coverNameText').innerText = 'FOTO CARGADA'; const imageUrl = URL.createObjectURL(file); document.getElementById('ambient-bg').style.backgroundImage = `url(${imageUrl})`; } });
-
-        function initAudioAnalyzer() {
-            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            analyser = audioCtx.createAnalyser();
-            source = audioCtx.createMediaElementSource(audio);
-            source.connect(analyser);
-            analyser.connect(audioCtx.destination);
-            analyser.fftSize = 64; 
-            const bufferLength = analyser.frequencyBinCount;
-            dataArray = new Uint8Array(bufferLength);
-        }
-
-        // --- SISTEMA DE SHAKE CORREGIDO (Golpes e Impactos) ---
-        function analyzeBassForShake() {
-            if (!shakeEnabled || !analyser) return;
-            requestAnimationFrame(analyzeBassForShake);
-            analyser.getByteFrequencyData(dataArray);
-            
-            let bassLevel = 0;
-            // Promedio de las frecuencias más bajas (0 a 3)
-            for(let i = 0; i < 4; i++){ bassLevel += dataArray[i]; }
-            bassLevel = bassLevel / 4; 
-            
-            // Solo tiembla si el bajo está muy fuerte Y pegó un salto brusco (un impacto)
-            if (bassLevel > 210 && (bassLevel - previousBass) > 10) {
-                currentShake = 8; // Intensidad máxima en pixeles
-            }
-            
-            // Amortiguación: El temblor se reduce un 15% por cada frame
-            if (currentShake > 0) {
-                currentShake *= 0.85; 
-                if (currentShake < 0.5) currentShake = 0;
-            }
-            
-            previousBass = bassLevel;
-            
-            // Aplicar el temblor
-            if (currentShake > 0) {
-                const offsetX = (Math.random() - 0.5) * currentShake * 2;
-                const offsetY = (Math.random() - 0.5) * currentShake * 2;
-                playerFrame.style.transform = `translate3d(${offsetX}px, ${offsetY}px, 0)`;
-            } else { 
-                playerFrame.style.transform = `translate3d(0px, 0px, 0px)`; 
-            }
-        }
 
         function parseInputText(text) { const results = []; const lrcRegex = /\[(\d{2}):(\d{2}(?:\.\d{2,3})?)\](.*)/; const lines = text.split('\n'); lines.forEach(line => { const match = line.match(lrcRegex); if (match) { const minutes = parseInt(match[1], 10); const seconds = parseFloat(match[2]); const textContent = match[3].trim(); results.push({ time: (minutes * 60) + seconds, text: textContent }); } }); return results; }
 
@@ -487,15 +432,6 @@
             renderLyrics();
             audio.currentTime = 0; 
             
-            if (!analyser) initAudioAnalyzer();
-            shakeEnabled = true;
-            if (audioCtx.state === 'suspended') audioCtx.resume();
-            
-            // Reseteamos el sistema de impactos antes de iniciar
-            currentShake = 0;
-            previousBass = 0;
-            analyzeBassForShake();
-
             audio.play().then(() => {
                 setupScreen.classList.add('hidden');
                 setTimeout(() => { centerActiveLine(0); spawnParticles(); }, 100); 
