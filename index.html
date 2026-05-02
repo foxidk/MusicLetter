@@ -7,12 +7,10 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Anton&family=Bebas+Neue&family=Montserrat:wght@900&family=Poppins:wght@400;700;900&display=swap');
 
-        /* --- VARIABLES GLOBALES --- */
         :root {
             --primary-hex: #ff3333;
             --primary-rgb: 255, 51, 51;
             --main-font: 'Poppins', sans-serif;
-            --shake-intensity: 0px; 
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: var(--main-font); }
@@ -23,13 +21,17 @@
             display: flex; justify-content: center; align-items: center;
         }
 
-        /* --- CONTENEDOR PRINCIPAL CON EFECTO SHAKE --- */
+        /* --- CONTENEDOR PRINCIPAL OPTIMIZADO --- */
         #player-frame {
             position: relative; width: 100vw; height: 100vh;
-            overflow: hidden; transition: all 0.5s cubic-bezier(0.25, 1, 0.5, 1), filter 0.5s ease;
-            background: #030303; container-type: inline-size; 
-            transform: translate(calc(var(--shake-intensity) * (random() - 0.5)), calc(var(--shake-intensity) * (random() - 0.5)));
+            overflow: hidden; background: #030303; container-type: inline-size; 
+            /* Se quitó la transición global que causaba lag al hacer shake */
+            will-change: transform, filter; 
+            transform: translate3d(0,0,0); /* Fuerza aceleración 3D en la GPU */
         }
+
+        /* Transiciones suaves SOLO cuando cambia de filtro, no constantemente */
+        #player-frame.changing-filter { transition: filter 0.5s ease; }
 
         /* --- FILTROS VINTAGE --- */
         #player-frame.filter-vhs { filter: blur(0.6px) grayscale(0.2) sepia(0.1) opacity(0.9); }
@@ -59,19 +61,19 @@
             background: linear-gradient(135deg, #0a0a0a 0%, #171717 100%);
             background-size: cover; background-position: center;
             filter: blur(15px); transform: scale(1.1); z-index: 0;
-            transition: background-image 2s ease-in-out;
+            transition: background-image 1s ease-in-out; /* Reducido para menos lag al cargar */
         }
         #ambient-bg::after {
             content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0, 0, 0, 0.65); 
         }
 
-        /* --- UI CONFIGURACIÓN CON LEYENDA --- */
+        /* --- UI CONFIGURACIÓN --- */
         .setup-screen {
             position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
             background: rgba(5, 5, 5, 0.95); backdrop-filter: blur(30px);
             display: flex; justify-content: center; align-items: center;
-            z-index: 200; transition: opacity 0.4s ease, visibility 0.4s;
+            z-index: 200; transition: opacity 0.3s ease, visibility 0.3s;
             font-family: 'Poppins', sans-serif; 
         }
         .setup-screen.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
@@ -134,10 +136,12 @@
         }
         #progress-bar {
             height: 100%; width: 0%; background: var(--primary-hex);
-            box-shadow: 0 0 15px rgba(var(--primary-rgb), 0.8); transition: width 0.1s linear, background 0.3s;
+            box-shadow: 0 0 15px rgba(var(--primary-rgb), 0.8); 
+            transition: width 0.1s linear, background 0.3s;
+            will-change: width; /* GPU Boost */
         }
 
-        /* --- INDICADORES DE GRABACIÓN, ESC Y TEMA --- */
+        /* --- CONTROLES FLOTANTES --- */
         .esc-hint {
             position: fixed; top: 20px; left: 20px; color: rgba(255,255,255,0.3);
             font-size: 0.8rem; font-weight: 700; z-index: 100; letter-spacing: 1px; text-transform: uppercase;
@@ -153,7 +157,6 @@
         }
         .settings-toggle:hover { background: rgba(255,255,255,0.2); }
         
-        /* Ocultar elementos para grabar limpio */
         body.clean-mode .esc-hint, body.clean-mode .settings-toggle {
             opacity: 0 !important; pointer-events: none !important;
         }
@@ -181,28 +184,48 @@
         .f-bebas { font-family: 'Bebas Neue', sans-serif; font-size: 1.2rem; letter-spacing: 2px;}
         .f-anton { font-family: 'Anton', sans-serif; font-size: 1.1rem; letter-spacing: 1px;}
 
-        /* --- LETRAS CINEMÁTICAS --- */
+        /* --- LETRAS CINEMÁTICAS OPTIMIZADAS --- */
         .lyrics-wrapper { height: 100%; width: 100%; position: relative; overflow: hidden; z-index: 10; perspective: 1000px; }
-        .lyrics-content { width: 100%; position: relative; transition: transform 0.8s cubic-bezier(0.25, 1, 0.5, 1); display: flex; flex-direction: column; align-items: center; }
+        
+        /* Uso de translate3d para el contenedor de letras */
+        .lyrics-content { width: 100%; position: relative; transition: transform 0.6s cubic-bezier(0.25, 1, 0.5, 1); display: flex; flex-direction: column; align-items: center; will-change: transform; }
 
         .lyric-line {
             font-size: 5cqw; font-weight: 900; text-align: center; text-transform: uppercase;
             padding: 6vh 20px; width: 85%; display: flex; justify-content: center; flex-wrap: wrap; 
         }
         .word { display: inline-block; white-space: nowrap; margin-right: 0.25em; }
-        .char { display: inline-block; opacity: 0; transform: translateY(40px) scale(0.7) translateZ(-100px); filter: blur(15px); color: #ffffff; transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); }
         
-        .lyric-line.active .char { opacity: 1 !important; transform: translateY(0) scale(1.05) translateZ(0) !important; filter: blur(0px) !important; text-shadow: 0 0 20px rgba(255, 255, 255, 0.6), 0 0 40px rgba(255, 255, 255, 0.3) !important; }
-        .lyric-line.past .char { opacity: 0 !important; transform: translateY(-60px) scale(0.6) translateZ(-200px) !important; filter: blur(10px) !important; text-shadow: none !important; transition-delay: 0s !important; transition-duration: 0.6s !important; }
+        .char { 
+            display: inline-block; opacity: 0; color: #ffffff;
+            /* translate3d obliga al navegador a usar aceleración por hardware por cada letra */
+            transform: translate3d(0, 40px, -100px) scale(0.7); 
+            filter: blur(10px); /* Desenfoque reducido de 15 a 10 para mejor rendimiento */
+            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); 
+            will-change: transform, opacity, filter; /* Optimización extrema */
+        }
+        
+        .lyric-line.active .char { 
+            opacity: 1 !important; 
+            transform: translate3d(0, 0, 0) scale(1.05) !important; 
+            filter: blur(0px) !important; 
+            text-shadow: 0 0 20px rgba(255, 255, 255, 0.6), 0 0 40px rgba(255, 255, 255, 0.3) !important; 
+        }
+        
+        .lyric-line.past .char { 
+            opacity: 0 !important; 
+            transform: translate3d(0, -60px, -200px) scale(0.6) !important; 
+            filter: blur(8px) !important; 
+            text-shadow: none !important; transition-delay: 0s !important; transition-duration: 0.5s !important; 
+        }
 
-        /* CORRECCIÓN CRÍTICA: Se eliminó la transición que anulaba la animación de entrada */
         .word.highlight .char { color: var(--primary-hex) !important; }
         .lyric-line.active .word.highlight .char { text-shadow: 0 0 20px rgba(var(--primary-rgb), 0.8), 0 0 40px rgba(var(--primary-rgb), 0.4) !important; }
         
         .lyric-line.instrumental .char { animation: breathe 3s infinite ease-in-out; color: rgba(255, 255, 255, 0.4) !important; }
 
         #player-frame.vertical-mode .lyric-line { font-size: 9cqw; padding: 3vh 10px; width: 95%; }
-        #player-frame.vertical-mode .lyric-line.active .char { transform: translateY(0) scale(1.1) translateZ(0) !important; }
+        #player-frame.vertical-mode .lyric-line.active .char { transform: translate3d(0, 0, 0) scale(1.1) !important; }
 
         @keyframes breathe {
             0%, 100% { transform: scale(1); opacity: 0.3; text-shadow: 0 0 10px rgba(255,255,255,0.1); }
@@ -211,8 +234,8 @@
 
         /* --- PARTÍCULAS MUSICALES --- */
         #particles-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1; overflow: hidden; }
-        .particle { position: absolute; color: rgba(255, 255, 255, 0.15); filter: blur(1px); animation: floatUp ease-in-out forwards; font-family: Arial, sans-serif; text-shadow: 0 0 10px rgba(255, 255, 255, 0.2); }
-        @keyframes floatUp { 0% { transform: translateY(10vh) scale(0.5) rotate(0deg); opacity: 0; } 20% { opacity: 0.4; } 100% { transform: translateY(-60vh) scale(1.8) rotate(45deg); opacity: 0; } }
+        .particle { position: absolute; color: rgba(255, 255, 255, 0.15); filter: blur(1px); animation: floatUp ease-in-out forwards; font-family: Arial, sans-serif; text-shadow: 0 0 10px rgba(255, 255, 255, 0.2); will-change: transform, opacity; }
+        @keyframes floatUp { 0% { transform: translate3d(0, 10vh, 0) scale(0.5) rotate(0deg); opacity: 0; } 20% { opacity: 0.4; } 100% { transform: translate3d(0, -60vh, 0) scale(1.8) rotate(45deg); opacity: 0; } }
 
         @media (max-width: 768px) { .setup-box-wrapper { flex-direction: column; } .setup-box { padding: 25px; width: 100%; } #player-frame.vertical-mode { height: 100vh; width: 100vw; border-radius: 0; border: none; } }
     </style>
@@ -249,7 +272,7 @@
         </div>
     </div>
 
-    <!-- PANTALLA DE INICIO (SETUP + LEYENDA) -->
+    <!-- PANTALLA DE INICIO -->
     <div class="setup-screen" id="setupScreen">
         <div class="setup-box-wrapper">
             
@@ -272,15 +295,14 @@
                 <button class="btn-primary" onclick="startImmersiveExperience()">INICIAR MODO INMERSIVO</button>
             </div>
 
-            <!-- PANEL DE LEYENDA (PARA NO OLVIDAR) -->
             <div class="help-legend">
                 <h3>Comandos y Funciones</h3>
                 <ul>
                     <li><code>*texto*</code> <span>Resaltar color</span></li>
                     <li><code>... / 🎶</code> <span>Pausa Instrumental</span></li>
-                    <li><code>[H]</code> <span>Ocultar/Mostrar UI para grabar</span></li>
+                    <li><code>[H]</code> <span>Ocultar UI para grabar</span></li>
                     <li><code>[V]</code> <span>Ciclar filtro Vintage</span></li>
-                    <li><code>[ESC]</code> <span>Menú de inicio</span></li>
+                    <li><code>[ESC]</code> <span>Volver a Inicio</span></li>
                 </ul>
             </div>
 
@@ -321,14 +343,12 @@
             document.getElementById(`btn-${format}`).classList.add('active');
         }
 
-        // --- SISTEMA DE TECLAS ---
         document.addEventListener('keydown', (event) => {
-            // [ESC] para salir
             if (event.key === 'Escape') {
                 if (setupScreen.classList.contains('hidden')) {
                     audio.pause();
                     setupScreen.classList.remove('hidden');
-                    document.body.classList.remove('clean-mode'); // Quitamos modo limpio por si acaso
+                    document.body.classList.remove('clean-mode'); 
                     escHint.style.display = 'none';
                     settingsToggle.style.display = 'none';
                     settingsPanel.classList.remove('open');
@@ -336,21 +356,22 @@
                 }
             }
             
-            // [V] para filtros
             if (event.key === 'v' || event.key === 'V') {
                 if (setupScreen.classList.contains('hidden')) {
                     currentFilterIndex = (currentFilterIndex + 1) % filters.length;
                     const filterName = filters[currentFilterIndex];
+                    
+                    playerFrame.classList.add('changing-filter');
                     playerFrame.classList.remove('filter-vhs', 'filter-sepia');
                     if (filterName !== 'none') playerFrame.classList.add(`filter-${filterName}`);
+                    
+                    setTimeout(() => playerFrame.classList.remove('changing-filter'), 500);
                 }
             }
 
-            // [H] para Ocultar (Hide) botones y grabar
             if (event.key === 'h' || event.key === 'H') {
                 if (setupScreen.classList.contains('hidden')) {
                     document.body.classList.toggle('clean-mode');
-                    // Si el panel de settings estaba abierto, lo cerramos para no estorbar
                     settingsPanel.classList.remove('open');
                 }
             }
@@ -370,19 +391,28 @@
             dataArray = new Uint8Array(bufferLength);
         }
 
+        // --- OPTIMIZACIÓN DEL SHAKE (Translate3d en JS) ---
         function analyzeBassForShake() {
             if (!shakeEnabled || !analyser) return;
             requestAnimationFrame(analyzeBassForShake);
             analyser.getByteFrequencyData(dataArray);
+            
             let bassLevel = 0;
             for(let i = 0; i < 4; i++){ bassLevel += dataArray[i]; }
             bassLevel = bassLevel / 4; 
+            
             const threshold = 180;
             const maxShakeIntensity = 6; 
+            
             if (bassLevel > threshold) {
                 const intensity = ((bassLevel - threshold) / (255 - threshold)) * maxShakeIntensity;
-                document.documentElement.style.setProperty('--shake-intensity', `${intensity}px`);
-            } else { document.documentElement.style.setProperty('--shake-intensity', `0px`); }
+                const offsetX = (Math.random() - 0.5) * intensity * 2;
+                const offsetY = (Math.random() - 0.5) * intensity * 2;
+                // Modificamos el transform directo en lugar de variables CSS para evitar recálculos caros
+                playerFrame.style.transform = `translate3d(${offsetX}px, ${offsetY}px, 0)`;
+            } else { 
+                playerFrame.style.transform = `translate3d(0px, 0px, 0px)`; 
+            }
         }
 
         function parseInputText(text) { const results = []; const lrcRegex = /\[(\d{2}):(\d{2}(?:\.\d{2,3})?)\](.*)/; const lines = text.split('\n'); lines.forEach(line => { const match = line.match(lrcRegex); if (match) { const minutes = parseInt(match[1], 10); const seconds = parseFloat(match[2]); const textContent = match[3].trim(); results.push({ time: (minutes * 60) + seconds, text: textContent }); } }); return results; }
@@ -407,8 +437,33 @@
             const spacerBottom = document.createElement('div'); spacerBottom.style.height = '45vh'; lyricsContent.appendChild(spacerBottom);
         }
 
-        function centerActiveLine(activeIndex) { if (!lineElements[activeIndex]) return; const activeLine = lineElements[activeIndex]; const containerHeight = playerFrame.clientHeight; const lineOffset = activeLine.offsetTop; const lineHeight = activeLine.clientHeight; const translateY = (containerHeight / 2) - lineOffset - (lineHeight / 2); document.getElementById('lyricsContent').style.transform = `translateY(${translateY}px)`; }
-        function spawnParticles() { const symbols = ['♪', '♫', '♬']; const particleCount = Math.floor(Math.random() * 3) + 2; for (let i = 0; i < particleCount; i++) { const particle = document.createElement('div'); particle.className = 'particle'; particle.innerText = symbols[Math.floor(Math.random() * symbols.length)]; const isLeft = Math.random() > 0.5; const positionX = isLeft ? (Math.random() * 10 + 2) : (Math.random() * 10 + 88); particle.style.left = `${positionX}%`; particle.style.top = `${Math.random() * 20 + 60}%`; const sizeBase = currentFormat === 'vertical' ? 5 : 2; particle.style.fontSize = `${Math.random() * 2 + sizeBase}cqw`; particle.style.animationDuration = `${Math.random() * 4 + 5}s`; particlesContainer.appendChild(particle); setTimeout(() => { particle.remove(); }, 9000); } }
+        function centerActiveLine(activeIndex) { 
+            if (!lineElements[activeIndex]) return; 
+            const activeLine = lineElements[activeIndex]; 
+            const containerHeight = playerFrame.clientHeight; 
+            const lineOffset = activeLine.offsetTop; 
+            const lineHeight = activeLine.clientHeight; 
+            const translateY = (containerHeight / 2) - lineOffset - (lineHeight / 2); 
+            // Optimizado con translate3d
+            document.getElementById('lyricsContent').style.transform = `translate3d(0, ${translateY}px, 0)`; 
+        }
+        
+        // --- LÍMITE DE PARTÍCULAS PARA RENDIMIENTO ---
+        function spawnParticles() { 
+            // Si hay más de 12 partículas en pantalla, no crear más para evitar lag
+            if(document.querySelectorAll('.particle').length > 12) return;
+            
+            const symbols = ['♪', '♫', '♬']; const particleCount = Math.floor(Math.random() * 2) + 1; 
+            for (let i = 0; i < particleCount; i++) { 
+                const particle = document.createElement('div'); particle.className = 'particle'; particle.innerText = symbols[Math.floor(Math.random() * symbols.length)]; 
+                const isLeft = Math.random() > 0.5; const positionX = isLeft ? (Math.random() * 10 + 2) : (Math.random() * 10 + 88); 
+                particle.style.left = `${positionX}%`; particle.style.top = `${Math.random() * 20 + 60}%`; 
+                const sizeBase = currentFormat === 'vertical' ? 5 : 2; particle.style.fontSize = `${Math.random() * 2 + sizeBase}cqw`; 
+                particle.style.animationDuration = `${Math.random() * 4 + 5}s`; 
+                particlesContainer.appendChild(particle); 
+                setTimeout(() => { particle.remove(); }, 8500); 
+            } 
+        }
 
         function startImmersiveExperience() {
             const rawCode = document.getElementById('lyricsCodeInput').value;
@@ -417,7 +472,7 @@
             parsedLyricsData = parseInputText(rawCode);
             if(parsedLyricsData.length === 0) return alert("Formato LRC no detectado.");
 
-            document.body.classList.remove('clean-mode'); // Nos aseguramos de iniciar viendo los controles
+            document.body.classList.remove('clean-mode'); 
             escHint.style.display = 'block';
             settingsToggle.style.display = 'block';
 
@@ -438,13 +493,29 @@
             }).catch(e => alert("Interactúa con la página antes de dar Iniciar."));
         }
 
+        // --- BUCLE DE ACTUALIZACIÓN OPTIMIZADO ---
         audio.addEventListener('timeupdate', () => {
             const currentTime = audio.currentTime;
-            if(audio.duration) { const progressPercent = (currentTime / audio.duration) * 100; progressBar.style.width = `${progressPercent}%`; }
+            if(audio.duration) { 
+                const progressPercent = (currentTime / audio.duration) * 100; 
+                progressBar.style.width = `${progressPercent}%`; 
+            }
+            
             let activeIndex = 0; 
-            for (let i = 0; i < parsedLyricsData.length; i++) { if (currentTime >= parsedLyricsData[i].time - 0.2) { activeIndex = i; } else { break; } }
+            // Búsqueda inversa más rápida (usualmente el audio avanza hacia el final)
+            for (let i = parsedLyricsData.length - 1; i >= 0; i--) { 
+                if (currentTime >= parsedLyricsData[i].time - 0.2) { 
+                    activeIndex = i; 
+                    break; 
+                } 
+            }
+            
             if (activeIndex !== currentLineIndex) {
-                lineElements.forEach((el, index) => { if (index < activeIndex) { el.className = 'lyric-line past'; } else if (index === activeIndex) { el.className = 'lyric-line active'; } else { el.className = 'lyric-line future'; } });
+                lineElements.forEach((el, index) => { 
+                    if (index < activeIndex) { el.className = 'lyric-line past'; } 
+                    else if (index === activeIndex) { el.className = 'lyric-line active'; } 
+                    else { el.className = 'lyric-line future'; } 
+                });
                 centerActiveLine(activeIndex);
                 if(!lineElements[activeIndex].classList.contains('instrumental')) { spawnParticles(); }
                 currentLineIndex = activeIndex;
