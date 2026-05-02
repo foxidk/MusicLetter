@@ -3,9 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Creador de Estados Premium - Estudio de Grabación</title>
+    <title>Creador de lyrics</title>
     <style>
-        /* Importamos las nuevas tipografías de Google Fonts */
         @import url('https://fonts.googleapis.com/css2?family=Anton&family=Bebas+Neue&family=Montserrat:wght@900&family=Poppins:wght@400;700;900&display=swap');
 
         /* --- VARIABLES GLOBALES --- */
@@ -13,62 +12,37 @@
             --primary-hex: #ff3333;
             --primary-rgb: 255, 51, 51;
             --main-font: 'Poppins', sans-serif;
-            --shake-intensity: 0px; /* Dinámico por JS */
+            --shake-intensity: 0px; 
         }
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: var(--main-font); 
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: var(--main-font); }
 
         body {
-            background-color: #000000; 
-            color: #ffffff;
-            overflow: hidden; 
-            height: 100vh;
-            width: 100vw;
-            user-select: none; 
-            -webkit-user-select: none;
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            background-color: #000000; color: #ffffff; overflow: hidden; 
+            height: 100vh; width: 100vw; user-select: none; -webkit-user-select: none;
+            display: flex; justify-content: center; align-items: center;
         }
 
         /* --- CONTENEDOR PRINCIPAL CON EFECTO SHAKE --- */
         #player-frame {
             position: relative; width: 100vw; height: 100vh;
-            overflow: hidden; transition: all 0.5s cubic-bezier(0.25, 1, 0.5, 1);
+            overflow: hidden; transition: all 0.5s cubic-bezier(0.25, 1, 0.5, 1), filter 0.5s ease;
             background: #030303; container-type: inline-size; 
-            
-            /* Animación de temblor dinámico */
             transform: translate(calc(var(--shake-intensity) * (random() - 0.5)), calc(var(--shake-intensity) * (random() - 0.5)));
         }
 
         /* --- FILTROS VINTAGE --- */
-        /* Estilo base */
-        #player-frame {
-            transition: all 0.5s cubic-bezier(0.25, 1, 0.5, 1), filter 0.5s ease;
-        }
-
-        /* Filtro VHS */
-        #player-frame.filter-vhs {
-            filter: blur(0.6px) grayscale(0.2) sepia(0.1) opacity(0.9);
-        }
+        #player-frame.filter-vhs { filter: blur(0.6px) grayscale(0.2) sepia(0.1) opacity(0.9); }
         #player-frame.filter-vhs::before {
             content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAAHElEQVQI12P4//8/w38GIAXDIBKE0DHxgljNBAAO9TXL0Y4OHwAAAABJRU5ErkJggg=='); /* Ruido estático */
+            background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAAHElEQVQI12P4//8/w38GIAXDIBKE0DHxgljNBAAO9TXL0Y4OHwAAAABJRU5ErkJggg=='); 
             opacity: 0.1; z-index: 5; pointer-events: none;
         }
 
-        /* Filtro Sepia */
-        #player-frame.filter-sepia {
-            filter: sepia(1) grayscale(0.2) blur(0.3px) contrast(0.9) brightness(0.9);
-        }
+        #player-frame.filter-sepia { filter: sepia(1) grayscale(0.2) blur(0.3px) contrast(0.9) brightness(0.9); }
         #player-frame.filter-sepia::before {
             content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCIgdmlld0JveD0iMCAwIDQwIDQwIj48ZyBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiM2NjYiIGZpbGwtb3BhY2l0eT0iMC4wNSI+PHBhdGggZD0iTTAgMGg0MHY0MEgwVjB6bTIwIDIwaDIwdjIwSDIWMjB6TTAgMjBoMjB2MjBIMFYyMHoyMCAwaDIwdjIwSDIWMHoiLz48L2c+PC9nPjwvc3ZnPg=='); /* Textura de película antigua */
+            background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCIgdmlld0JveD0iMCAwIDQwIDQwIj48ZyBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiM2NjYiIGZpbGwtb3BhY2l0eT0iMC4wNSI+PHBhdGggZD0iTTAgMGg0MHY0MEgwVjB6bTIwIDIwaDIwdjIwSDIWMjB6TTAgMjBoMjB2MjBIMFYyMHoyMCAwaDIwdjIwSDIWMHoiLz48L2c+PC9nPjwvc3ZnPg=='); 
             opacity: 0.3; z-index: 5; pointer-events: none;
         }
 
@@ -136,14 +110,11 @@
         }
         textarea:focus { border-color: var(--primary-hex); }
 
-        .submit-row { display: flex; gap: 15px; }
         .btn-primary { 
-            flex: 1; background: #ffffff; color: #000000; border: none; border-radius: 50px; padding: 15px; 
+            width: 100%; background: #ffffff; color: #000000; border: none; border-radius: 50px; padding: 15px; 
             font-size: 0.9rem; font-weight: 900; cursor: pointer; transition: all 0.3s; text-transform: uppercase; letter-spacing: 2px; 
         }
         .btn-primary:hover { transform: scale(1.02); box-shadow: 0 10px 30px rgba(255, 255, 255, 0.2); }
-        .btn-record { flex: 1; background: #222; border-radius: 50px; color: white; border: 2px solid #333;}
-        .btn-record:hover { background: #333; border-color: var(--primary-hex); }
 
         /* --- PANEL DE LEYENDA (Ayuda) --- */
         .help-legend {
@@ -153,8 +124,8 @@
         }
         .help-legend h3 { font-size: 1.1rem; color: #ffffff; text-transform: uppercase; letter-spacing: 1px; }
         .help-legend ul { list-style: none; display: flex; flex-direction: column; gap: 10px; }
-        .help-legend li { font-size: 0.85rem; color: rgba(255,255,255,0.7); display: flex; justify-content: space-between; }
-        .help-legend li code { background: rgba(255,255,255,0.1); padding: 2px 5px; border-radius: 4px; color: var(--primary-hex); font-family: monospace; font-weight: bold;}
+        .help-legend li { font-size: 0.85rem; color: rgba(255,255,255,0.7); display: flex; justify-content: space-between; align-items: center; }
+        .help-legend li code { background: rgba(255,255,255,0.1); padding: 3px 6px; border-radius: 4px; color: var(--primary-hex); font-family: monospace; font-weight: bold;}
 
         /* --- BARRA DE PROGRESO --- */
         #progress-container {
@@ -166,18 +137,12 @@
             box-shadow: 0 0 15px rgba(var(--primary-rgb), 0.8); transition: width 0.1s linear, background 0.3s;
         }
 
-        /* --- INDICADORES DE GRABACIÓN Y ESC --- */
+        /* --- INDICADORES DE GRABACIÓN, ESC Y TEMA --- */
         .esc-hint {
             position: fixed; top: 20px; left: 20px; color: rgba(255,255,255,0.3);
             font-size: 0.8rem; font-weight: 700; z-index: 100; letter-spacing: 1px; text-transform: uppercase;
-            font-family: 'Poppins', sans-serif;
+            font-family: 'Poppins', sans-serif; transition: opacity 0.3s;
         }
-        /* Clase para limpiar la pantalla al grabar */
-        .clean-mode .esc-hint, .clean-mode .settings-toggle {
-            opacity: 0 !important; pointer-events: none !important;
-        }
-
-        /* --- PANEL DE AJUSTES EN VIVO --- */
         .settings-toggle {
             position: fixed; top: 20px; right: 20px; z-index: 150;
             background: rgba(255,255,255,0.1); backdrop-filter: blur(10px);
@@ -188,6 +153,12 @@
         }
         .settings-toggle:hover { background: rgba(255,255,255,0.2); }
         
+        /* Ocultar elementos para grabar limpio */
+        body.clean-mode .esc-hint, body.clean-mode .settings-toggle {
+            opacity: 0 !important; pointer-events: none !important;
+        }
+
+        /* --- PANEL DE AJUSTES EN VIVO --- */
         .live-settings-panel {
             position: fixed; top: 70px; right: 20px; z-index: 150;
             background: rgba(10, 10, 10, 0.85); backdrop-filter: blur(20px);
@@ -197,7 +168,6 @@
             pointer-events: none; font-family: 'Poppins', sans-serif;
         }
         .live-settings-panel.open { transform: translateX(0); opacity: 1; pointer-events: auto; }
-        
         .live-settings-panel h3 { font-size: 0.9rem; color: rgba(255,255,255,0.5); margin-bottom: 10px; text-transform: uppercase; letter-spacing: 1px; }
         
         .color-options { display: flex; gap: 10px; margin-bottom: 25px; }
@@ -221,11 +191,14 @@
         }
         .word { display: inline-block; white-space: nowrap; margin-right: 0.25em; }
         .char { display: inline-block; opacity: 0; transform: translateY(40px) scale(0.7) translateZ(-100px); filter: blur(15px); color: #ffffff; transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); }
+        
         .lyric-line.active .char { opacity: 1 !important; transform: translateY(0) scale(1.05) translateZ(0) !important; filter: blur(0px) !important; text-shadow: 0 0 20px rgba(255, 255, 255, 0.6), 0 0 40px rgba(255, 255, 255, 0.3) !important; }
         .lyric-line.past .char { opacity: 0 !important; transform: translateY(-60px) scale(0.6) translateZ(-200px) !important; filter: blur(10px) !important; text-shadow: none !important; transition-delay: 0s !important; transition-duration: 0.6s !important; }
 
-        .word.highlight .char { color: var(--primary-hex) !important; transition: color 0.3s ease; }
+        /* CORRECCIÓN CRÍTICA: Se eliminó la transición que anulaba la animación de entrada */
+        .word.highlight .char { color: var(--primary-hex) !important; }
         .lyric-line.active .word.highlight .char { text-shadow: 0 0 20px rgba(var(--primary-rgb), 0.8), 0 0 40px rgba(var(--primary-rgb), 0.4) !important; }
+        
         .lyric-line.instrumental .char { animation: breathe 3s infinite ease-in-out; color: rgba(255, 255, 255, 0.4) !important; }
 
         #player-frame.vertical-mode .lyric-line { font-size: 9cqw; padding: 3vh 10px; width: 95%; }
@@ -241,7 +214,7 @@
         .particle { position: absolute; color: rgba(255, 255, 255, 0.15); filter: blur(1px); animation: floatUp ease-in-out forwards; font-family: Arial, sans-serif; text-shadow: 0 0 10px rgba(255, 255, 255, 0.2); }
         @keyframes floatUp { 0% { transform: translateY(10vh) scale(0.5) rotate(0deg); opacity: 0; } 20% { opacity: 0.4; } 100% { transform: translateY(-60vh) scale(1.8) rotate(45deg); opacity: 0; } }
 
-        @media (max-width: 768px) { .upload-row { flex-direction: column; } .setup-box { padding: 25px; width: 95%; } #player-frame.vertical-mode { height: 100vh; width: 100vw; border-radius: 0; border: none; } }
+        @media (max-width: 768px) { .setup-box-wrapper { flex-direction: column; } .setup-box { padding: 25px; width: 100%; } #player-frame.vertical-mode { height: 100vh; width: 100vw; border-radius: 0; border: none; } }
     </style>
 </head>
 <body>
@@ -258,6 +231,7 @@
     <!-- UI EN REPRODUCCIÓN -->
     <div class="esc-hint" id="escHint" style="display: none;">Presiona ESC para editar</div>
     <div class="settings-toggle" id="settingsToggle" onclick="toggleSettings()">⚙️ Tema</div>
+    
     <div class="live-settings-panel" id="settingsPanel">
         <h3>Color Neón</h3>
         <div class="color-options">
@@ -275,7 +249,7 @@
         </div>
     </div>
 
-    <!-- PANTALLA DE INICIO ACTUALIZADA (SETUP + LEYENDA) -->
+    <!-- PANTALLA DE INICIO (SETUP + LEYENDA) -->
     <div class="setup-screen" id="setupScreen">
         <div class="setup-box-wrapper">
             
@@ -294,22 +268,19 @@
                     <button class="format-btn active" id="btn-horizontal" onclick="setFormat('horizontal')">🖥️ Pantalla Completa</button>
                     <button class="format-btn" id="btn-vertical" onclick="setFormat('vertical')">📱 Modo Estado (9:16)</button>
                 </div>
-                <textarea id="lyricsCodeInput" placeholder="3. Pega aquí tu código LRC sacado de Lyricsify o internet..."></textarea>
-                <div class="submit-row">
-                    <button class="btn-primary" onclick="startImmersiveExperience(false)">INICIAR INMERSIVO</button>
-                    <button class="btn-primary btn-record" onclick="startImmersiveExperience(true)">🎥 Iniciar Grabación Limpia</button>
-                </div>
+                <textarea id="lyricsCodeInput" placeholder="3. Pega aquí tu código LRC..."></textarea>
+                <button class="btn-primary" onclick="startImmersiveExperience()">INICIAR MODO INMERSIVO</button>
             </div>
 
             <!-- PANEL DE LEYENDA (PARA NO OLVIDAR) -->
             <div class="help-legend">
                 <h3>Comandos y Funciones</h3>
                 <ul>
-                    <li><code>*texto*</code> <span>Resaltado Rojo</span></li>
+                    <li><code>*texto*</code> <span>Resaltar color</span></li>
                     <li><code>... / 🎶</code> <span>Pausa Instrumental</span></li>
-                    <li><code>[mm:ss.xx]</code> <span>Tiempo LRC Estándar</span></li>
-                    <li><code>[V]</code> <span>Ciclar Filtro Vintage (Grabar)</span></li>
-                    <li><code>[ESC]</code> <span>Editar / Mostrar Controles</span></li>
+                    <li><code>[H]</code> <span>Ocultar/Mostrar UI para grabar</span></li>
+                    <li><code>[V]</code> <span>Ciclar filtro Vintage</span></li>
+                    <li><code>[ESC]</code> <span>Menú de inicio</span></li>
                 </ul>
             </div>
 
@@ -331,21 +302,17 @@
         const settingsToggle = document.getElementById('settingsToggle');
         const settingsPanel = document.getElementById('settingsPanel');
 
-        // Variables de Audio API para Camera Shake
         let audioCtx, analyser, source;
         let dataArray;
         let shakeEnabled = false;
 
-        // Variables de Filtros Vintage
         let currentFilterIndex = 0;
         const filters = ['none', 'vhs', 'sepia'];
 
-        // Funciones del Panel en Vivo
         function toggleSettings() { settingsPanel.classList.toggle('open'); }
         function setThemeColor(hex, rgb) { document.documentElement.style.setProperty('--primary-hex', hex); document.documentElement.style.setProperty('--primary-rgb', rgb); }
         function setFont(fontName) { document.documentElement.style.setProperty('--main-font', `"${fontName}", sans-serif`); }
 
-        // Selección de formato
         let currentFormat = 'horizontal';
         function setFormat(format) {
             currentFormat = format;
@@ -354,93 +321,72 @@
             document.getElementById(`btn-${format}`).classList.add('active');
         }
 
-        // --- SISTEMA DE TECLAS (ESC, V) ---
+        // --- SISTEMA DE TECLAS ---
         document.addEventListener('keydown', (event) => {
-            // Tecla ESC para volver o mostrar controles
+            // [ESC] para salir
             if (event.key === 'Escape') {
                 if (setupScreen.classList.contains('hidden')) {
-                    if (document.body.classList.contains('clean-mode')) {
-                        // Si está grabando limpio, solo muestra los controles, no sale
-                        document.body.classList.remove('clean-mode');
-                        escHint.style.display = 'block';
-                        settingsToggle.style.display = 'block';
-                    } else {
-                        // Si no, sale al menú
-                        audio.pause();
-                        setupScreen.classList.remove('hidden');
-                        escHint.style.display = 'none';
-                        settingsToggle.style.display = 'none';
-                        settingsPanel.classList.remove('open');
-                        shakeEnabled = false; // Parar el analizador
-                    }
+                    audio.pause();
+                    setupScreen.classList.remove('hidden');
+                    document.body.classList.remove('clean-mode'); // Quitamos modo limpio por si acaso
+                    escHint.style.display = 'none';
+                    settingsToggle.style.display = 'none';
+                    settingsPanel.classList.remove('open');
+                    shakeEnabled = false; 
                 }
             }
             
-            // Tecla V para ciclar filtros vintage (solo en reproducción)
+            // [V] para filtros
             if (event.key === 'v' || event.key === 'V') {
                 if (setupScreen.classList.contains('hidden')) {
                     currentFilterIndex = (currentFilterIndex + 1) % filters.length;
                     const filterName = filters[currentFilterIndex];
-                    
-                    // Limpiar clases previas y aplicar la nueva
                     playerFrame.classList.remove('filter-vhs', 'filter-sepia');
-                    if (filterName !== 'none') {
-                        playerFrame.classList.add(`filter-${filterName}`);
-                    }
+                    if (filterName !== 'none') playerFrame.classList.add(`filter-${filterName}`);
+                }
+            }
+
+            // [H] para Ocultar (Hide) botones y grabar
+            if (event.key === 'h' || event.key === 'H') {
+                if (setupScreen.classList.contains('hidden')) {
+                    document.body.classList.toggle('clean-mode');
+                    // Si el panel de settings estaba abierto, lo cerramos para no estorbar
+                    settingsPanel.classList.remove('open');
                 }
             }
         });
 
-        // Configuración de archivos
         document.getElementById('audioUpload').addEventListener('change', function(e) { const file = e.target.files[0]; if (file) { document.getElementById('fileNameText').innerText = file.name.substring(0, 15) + '...'; audio.src = URL.createObjectURL(file); } });
         document.getElementById('coverUpload').addEventListener('change', function(e) { const file = e.target.files[0]; if (file) { document.getElementById('coverNameText').innerText = 'FOTO CARGADA'; const imageUrl = URL.createObjectURL(file); document.getElementById('ambient-bg').style.backgroundImage = `url(${imageUrl})`; } });
 
-        // --- CONFIGURACIÓN DEL AUDIO ANALYZER (CAMERA SHAKE) ---
         function initAudioAnalyzer() {
-            // AudioContext compatible
             audioCtx = new (window.AudioContext || window.webkitAudioContext)();
             analyser = audioCtx.createAnalyser();
-            
             source = audioCtx.createMediaElementSource(audio);
             source.connect(analyser);
             analyser.connect(audioCtx.destination);
-            
-            analyser.fftSize = 64; // Necesitamos baja resolución para los bajos
+            analyser.fftSize = 64; 
             const bufferLength = analyser.frequencyBinCount;
             dataArray = new Uint8Array(bufferLength);
         }
 
-        // Bucle de análisis de bajos para temblor
         function analyzeBassForShake() {
             if (!shakeEnabled || !analyser) return;
             requestAnimationFrame(analyzeBassForShake);
-            
             analyser.getByteFrequencyData(dataArray);
-            
-            // Los bajos suelen estar en los primeros bins de frecuencia (0 a 3)
             let bassLevel = 0;
-            const bassBins = 4;
-            for(let i = 0; i < bassBins; i++){
-                bassLevel += dataArray[i];
-            }
-            bassLevel = bassLevel / bassBins; // Promedio de bajos
-            
-            // Umbral de intensidad para activar el temblor (puedes ajustar el 200)
+            for(let i = 0; i < 4; i++){ bassLevel += dataArray[i]; }
+            bassLevel = bassLevel / 4; 
             const threshold = 180;
-            const maxShakeIntensity = 6; // px de temblor
-
+            const maxShakeIntensity = 6; 
             if (bassLevel > threshold) {
                 const intensity = ((bassLevel - threshold) / (255 - threshold)) * maxShakeIntensity;
                 document.documentElement.style.setProperty('--shake-intensity', `${intensity}px`);
-            } else {
-                document.documentElement.style.setProperty('--shake-intensity', `0px`);
-            }
+            } else { document.documentElement.style.setProperty('--shake-intensity', `0px`); }
         }
 
-        // LRC Parsing
         function parseInputText(text) { const results = []; const lrcRegex = /\[(\d{2}):(\d{2}(?:\.\d{2,3})?)\](.*)/; const lines = text.split('\n'); lines.forEach(line => { const match = line.match(lrcRegex); if (match) { const minutes = parseInt(match[1], 10); const seconds = parseFloat(match[2]); const textContent = match[3].trim(); results.push({ time: (minutes * 60) + seconds, text: textContent }); } }); return results; }
 
-        // Renderizado
         function renderLyrics() {
             const lyricsContent = document.getElementById('lyricsContent'); lyricsContent.innerHTML = ''; lineElements = [];
             const spacerTop = document.createElement('div'); spacerTop.style.height = '45vh'; lyricsContent.appendChild(spacerTop);
@@ -464,24 +410,16 @@
         function centerActiveLine(activeIndex) { if (!lineElements[activeIndex]) return; const activeLine = lineElements[activeIndex]; const containerHeight = playerFrame.clientHeight; const lineOffset = activeLine.offsetTop; const lineHeight = activeLine.clientHeight; const translateY = (containerHeight / 2) - lineOffset - (lineHeight / 2); document.getElementById('lyricsContent').style.transform = `translateY(${translateY}px)`; }
         function spawnParticles() { const symbols = ['♪', '♫', '♬']; const particleCount = Math.floor(Math.random() * 3) + 2; for (let i = 0; i < particleCount; i++) { const particle = document.createElement('div'); particle.className = 'particle'; particle.innerText = symbols[Math.floor(Math.random() * symbols.length)]; const isLeft = Math.random() > 0.5; const positionX = isLeft ? (Math.random() * 10 + 2) : (Math.random() * 10 + 88); particle.style.left = `${positionX}%`; particle.style.top = `${Math.random() * 20 + 60}%`; const sizeBase = currentFormat === 'vertical' ? 5 : 2; particle.style.fontSize = `${Math.random() * 2 + sizeBase}cqw`; particle.style.animationDuration = `${Math.random() * 4 + 5}s`; particlesContainer.appendChild(particle); setTimeout(() => { particle.remove(); }, 9000); } }
 
-        // Iniciar Experiencia ACTUALIZADA
-        function startImmersiveExperience(isCleanMode) {
+        function startImmersiveExperience() {
             const rawCode = document.getElementById('lyricsCodeInput').value;
             if (!audio.src || audio.src === window.location.href) { alert("Sube el audio MP3 primero."); return; }
             if (!rawCode.trim()) { alert("Pega el texto LRC."); return; }
             parsedLyricsData = parseInputText(rawCode);
             if(parsedLyricsData.length === 0) return alert("Formato LRC no detectado.");
 
-            // Configurar modo de grabación (Limpio o Normal)
-            if (isCleanMode) {
-                document.body.classList.add('clean-mode');
-                escHint.style.display = 'none';
-                settingsToggle.style.display = 'none';
-            } else {
-                document.body.classList.remove('clean-mode');
-                escHint.style.display = 'block';
-                settingsToggle.style.display = 'block';
-            }
+            document.body.classList.remove('clean-mode'); // Nos aseguramos de iniciar viendo los controles
+            escHint.style.display = 'block';
+            settingsToggle.style.display = 'block';
 
             if (currentFormat === 'vertical') playerFrame.classList.add('vertical-mode');
             else playerFrame.classList.remove('vertical-mode');
@@ -489,11 +427,10 @@
             renderLyrics();
             audio.currentTime = 0; 
             
-            // Iniciar Audio API para Camera Shake
-            if (!analyser) initAudioAnalyzer(); // Solo inicializar una vez
+            if (!analyser) initAudioAnalyzer();
             shakeEnabled = true;
             if (audioCtx.state === 'suspended') audioCtx.resume();
-            analyzeBassForShake(); // Iniciar bucle de análisis
+            analyzeBassForShake();
 
             audio.play().then(() => {
                 setupScreen.classList.add('hidden');
@@ -501,7 +438,6 @@
             }).catch(e => alert("Interactúa con la página antes de dar Iniciar."));
         }
 
-        // Sincronización
         audio.addEventListener('timeupdate', () => {
             const currentTime = audio.currentTime;
             if(audio.duration) { const progressPercent = (currentTime / audio.duration) * 100; progressBar.style.width = `${progressPercent}%`; }
